@@ -1,0 +1,92 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "235cdb0600fc7c04a179b870ee45fcc2",
+    "entities": [
+      {
+        "tableName": "cameras",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `site_id` TEXT NOT NULL, `name` TEXT NOT NULL, `onvif_address` TEXT, `rtsp_url` TEXT, `username` TEXT, `stream_profile` TEXT, `ptz_capable` INTEGER NOT NULL, `audio_capable` INTEGER NOT NULL, `status` TEXT NOT NULL, `thumbnail_url` TEXT, `sort_order` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "siteId",
+            "columnName": "site_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "onvifAddress",
+            "columnName": "onvif_address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rtspUrl",
+            "columnName": "rtsp_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "streamProfile",
+            "columnName": "stream_profile",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ptzCapable",
+            "columnName": "ptz_capable",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "audioCapable",
+            "columnName": "audio_capable",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "thumbnailUrl",
+            "columnName": "thumbnail_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '235cdb0600fc7c04a179b870ee45fcc2')"
+    ]
+  }
+}

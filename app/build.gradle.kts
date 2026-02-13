@@ -1,0 +1,58 @@
+plugins {
+    id("vigipro.android.application")
+    id("vigipro.android.compose")
+    id("vigipro.android.hilt")
+    alias(libs.plugins.kotlin.serialization)
+}
+
+android {
+    namespace = "com.vigipro.app"
+
+    defaultConfig {
+        applicationId = "com.vigipro.app"
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+}
+
+dependencies {
+    // Core modules
+    implementation(project(":core:core-ui"))
+    implementation(project(":core:core-network"))
+    implementation(project(":core:core-data"))
+    implementation(project(":core:core-model"))
+
+    // Feature modules
+    implementation(project(":feature:feature-auth"))
+    implementation(project(":feature:feature-dashboard"))
+    implementation(project(":feature:feature-player"))
+    implementation(project(":feature:feature-devices"))
+    implementation(project(":feature:feature-access-control"))
+    implementation(project(":feature:feature-settings"))
+
+    // AndroidX
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
+
+    // Compose icons
+    implementation(libs.compose.material.icons.extended)
+
+    // Testing
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.junit.android)
+    androidTestImplementation(libs.espresso.core)
+}
