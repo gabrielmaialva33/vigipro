@@ -3,6 +3,7 @@ package com.vigipro.feature.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.monitor.CameraStatusMonitor
+import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.model.Camera
@@ -20,6 +21,7 @@ data class DashboardState(
     val gridLayout: GridLayout = GridLayout.GRID_2X2,
     val isLoading: Boolean = true,
     val cameraToDelete: Camera? = null,
+    val userEmail: String? = null,
 )
 
 sealed interface DashboardSideEffect {
@@ -39,12 +41,18 @@ class DashboardViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
     private val siteRepository: SiteRepository,
     private val statusMonitor: CameraStatusMonitor,
+    private val authRepository: AuthRepository,
 ) : ViewModel(), ContainerHost<DashboardState, DashboardSideEffect> {
 
     override val container = viewModelScope.container<DashboardState, DashboardSideEffect>(DashboardState()) {
         observeSites()
         observeCameras()
+        loadUserInfo()
         statusMonitor.start(viewModelScope)
+    }
+
+    private fun loadUserInfo() = intent {
+        reduce { state.copy(userEmail = authRepository.currentUserEmail) }
     }
 
     override fun onCleared() {
