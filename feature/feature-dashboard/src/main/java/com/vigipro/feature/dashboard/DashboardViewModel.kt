@@ -2,6 +2,7 @@ package com.vigipro.feature.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vigipro.core.data.monitor.CameraStatusMonitor
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.model.Camera
 import com.vigipro.core.ui.components.GridLayout
@@ -25,10 +26,17 @@ sealed interface DashboardSideEffect {
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
+    private val statusMonitor: CameraStatusMonitor,
 ) : ViewModel(), ContainerHost<DashboardState, DashboardSideEffect> {
 
     override val container = viewModelScope.container<DashboardState, DashboardSideEffect>(DashboardState()) {
         observeCameras()
+        statusMonitor.start(viewModelScope)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        statusMonitor.stop()
     }
 
     private fun observeCameras() = intent {

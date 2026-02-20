@@ -3,6 +3,7 @@ package com.vigipro.feature.devices.addcamera
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.rtsp.RtspConnectionTester
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,8 @@ data class AddCameraState(
     val username: String = "",
     val password: String = "",
     val isSaving: Boolean = false,
+    val isTesting: Boolean = false,
+    val testResult: String? = null,
     val nameError: String? = null,
     val rtspUrlError: String? = null,
 )
@@ -24,11 +27,13 @@ data class AddCameraState(
 sealed interface AddCameraSideEffect {
     data object CameraAdded : AddCameraSideEffect
     data class ShowError(val message: String) : AddCameraSideEffect
+    data class ShowTestResult(val message: String) : AddCameraSideEffect
 }
 
 @HiltViewModel
 class AddCameraViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
+    private val connectionTester: RtspConnectionTester,
 ) : ViewModel(), ContainerHost<AddCameraState, AddCameraSideEffect> {
 
     override val container = viewModelScope.container<AddCameraState, AddCameraSideEffect>(AddCameraState())
@@ -49,6 +54,28 @@ class AddCameraViewModel @Inject constructor(
         reduce { state.copy(password = password) }
     }
 
+    fun onTestConnection() = intent {
+        val rtspUrlError = if (state.rtspUrl.isBlank()) "URL RTSP obrigatoria" else null
+        if (rtspUrlError != null) {
+            reduce { state.copy(rtspUrlError = rtspUrlError) }
+            return@intent
+        }
+
+        reduce { state.copy(isTesting = true, testResult = null) }
+
+        val url = buildRtspUrl(state)
+        val result = connectionTester.testConnection(url)
+
+        val message = if (result.success) {
+            "Conexao bem-sucedida (${result.latencyMs}ms)"
+        } else {
+            result.errorMessage ?: "Falha na conexao"
+        }
+
+        reduce { state.copy(isTesting = false, testResult = message) }
+        postSideEffect(AddCameraSideEffect.ShowTestResult(message))
+    }
+
     fun onSave() = intent {
         val nameError = if (state.name.isBlank()) "Nome obrigatorio" else null
         val rtspUrlError = if (state.rtspUrl.isBlank()) "URL RTSP obrigatoria" else null
@@ -61,13 +88,17 @@ class AddCameraViewModel @Inject constructor(
         reduce { state.copy(isSaving = true) }
 
         try {
+            val url = buildRtspUrl(state)
+            val testResult = connectionTester.testConnection(url)
+            val initialStatus = if (testResult.success) CameraStatus.ONLINE else CameraStatus.OFFLINE
+
             val camera = Camera(
                 id = UUID.randomUUID().toString(),
                 siteId = "local",
                 name = state.name.trim(),
-                rtspUrl = buildRtspUrl(state),
+                rtspUrl = url,
                 username = state.username.ifBlank { null },
-                status = CameraStatus.OFFLINE,
+                status = initialStatus,
             )
             cameraRepository.addCamera(camera)
             postSideEffect(AddCameraSideEffect.CameraAdded)

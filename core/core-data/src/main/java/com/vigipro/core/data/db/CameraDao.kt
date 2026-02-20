@@ -32,4 +32,10 @@ interface CameraDao {
 
     @Query("DELETE FROM cameras WHERE site_id = :siteId")
     suspend fun deleteBySite(siteId: String)
+
+    @Query("UPDATE cameras SET status = :status WHERE id = :id")
+    suspend fun updateStatus(id: String, status: String)
+
+    @Query("UPDATE cameras SET thumbnail_url = :thumbnailUrl WHERE id = :id")
+    suspend fun updateThumbnailUrl(id: String, thumbnailUrl: String?)
 }

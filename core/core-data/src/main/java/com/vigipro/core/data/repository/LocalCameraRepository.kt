@@ -4,6 +4,7 @@ import com.vigipro.core.data.db.CameraDao
 import com.vigipro.core.data.db.toDomain
 import com.vigipro.core.data.db.toEntity
 import com.vigipro.core.model.Camera
+import com.vigipro.core.model.CameraStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -31,4 +32,10 @@ class LocalCameraRepository @Inject constructor(
 
     override suspend fun deleteCamera(id: String) =
         cameraDao.deleteById(id)
+
+    override suspend fun updateCameraStatus(id: String, status: CameraStatus) =
+        cameraDao.updateStatus(id, status.name.lowercase())
+
+    override suspend fun updateCameraThumbnailUrl(id: String, thumbnailUrl: String?) =
+        cameraDao.updateThumbnailUrl(id, thumbnailUrl)
 }
