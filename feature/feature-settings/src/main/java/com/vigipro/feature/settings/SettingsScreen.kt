@@ -267,6 +267,18 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                // Audio bidirecional
+                SettingsSection(title = "AUDIO BIDIRECIONAL") {
+                    SettingsToggleItem(
+                        title = "Talkback (push-to-talk)",
+                        subtitle = "Habilitar botao de audio bidirecional no player",
+                        checked = state.preferences.talkbackEnabled,
+                        onCheckedChange = viewModel::onTalkbackEnabledChange,
+                    )
+                }
+
+                HorizontalDivider()
+
                 // Capturas
                 SettingsSection(title = "CAPTURAS") {
                     SettingsToggleItem(

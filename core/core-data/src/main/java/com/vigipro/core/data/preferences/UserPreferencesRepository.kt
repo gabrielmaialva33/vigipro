@@ -34,6 +34,7 @@ interface UserPreferencesRepository {
     suspend fun updateDetectAnimals(enabled: Boolean)
     suspend fun updateNotifyPersonDetected(enabled: Boolean)
     suspend fun updateDetectionIntervalMs(intervalMs: Long)
+    suspend fun updateTalkbackEnabled(enabled: Boolean)
     suspend fun clearCache()
 }
 
@@ -58,6 +59,7 @@ class LocalUserPreferencesRepository @Inject constructor(
         val DETECT_ANIMALS = booleanPreferencesKey("detect_animals")
         val NOTIFY_PERSON_DETECTED = booleanPreferencesKey("notify_person_detected")
         val DETECTION_INTERVAL = longPreferencesKey("detection_interval_ms")
+        val TALKBACK_ENABLED = booleanPreferencesKey("talkback_enabled")
     }
 
     override val userPreferences: Flow<UserPreferences> = dataStore.data
@@ -90,6 +92,7 @@ class LocalUserPreferencesRepository @Inject constructor(
                 detectAnimals = prefs[Keys.DETECT_ANIMALS] ?: false,
                 notifyPersonDetected = prefs[Keys.NOTIFY_PERSON_DETECTED] ?: false,
                 detectionIntervalMs = prefs[Keys.DETECTION_INTERVAL] ?: 750L,
+                talkbackEnabled = prefs[Keys.TALKBACK_ENABLED] ?: true,
             )
         }
 
@@ -161,6 +164,10 @@ class LocalUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateDetectionIntervalMs(intervalMs: Long) {
         safeEdit { it[Keys.DETECTION_INTERVAL] = intervalMs.coerceIn(500L, 2000L) }
+    }
+
+    override suspend fun updateTalkbackEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.TALKBACK_ENABLED] = enabled }
     }
 
     override suspend fun clearCache() {

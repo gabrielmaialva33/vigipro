@@ -1,9 +1,14 @@
 package com.vigipro.feature.player
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.view.SurfaceView
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -33,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -53,6 +59,7 @@ import com.vigipro.core.ui.theme.Dimens
 import com.vigipro.feature.player.snapshot.SnapshotManager
 import com.vigipro.feature.player.ui.DetectionOverlay
 import com.vigipro.feature.player.ui.PlayerControlsOverlay
+import com.vigipro.feature.player.ui.TalkbackButton
 import com.vigipro.feature.player.ui.PtzControlPad
 import com.vigipro.feature.player.ui.StreamInfoOverlay
 import com.vigipro.feature.player.util.FullscreenHelper
@@ -75,6 +82,18 @@ fun PlayerScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val snapshotManager = remember { SnapshotManager(context) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+
+    // Mic permission for talkback
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> viewModel.onMicPermissionResult(granted) }
+
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.RECORD_AUDIO,
+        ) == PackageManager.PERMISSION_GRANTED
+        viewModel.onMicPermissionResult(granted)
+    }
 
     // Handle back press in fullscreen
     BackHandler(enabled = state.isFullscreen) {
@@ -116,6 +135,9 @@ fun PlayerScreen(
             is PlayerSideEffect.ShowSnackbar -> {
                 scope.launch { snackbarHostState.showSnackbar(sideEffect.message) }
             }
+            PlayerSideEffect.RequestMicPermission -> {
+                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
         }
     }
 
@@ -142,6 +164,7 @@ fun PlayerScreen(
                 Lifecycle.Event.ON_PAUSE -> {
                     exoPlayer.pause()
                     viewModel.stopDetection()
+                    viewModel.onTalkbackRelease()
                 }
                 Lifecycle.Event.ON_RESUME -> {
                     if (exoPlayer.playbackState != Player.STATE_IDLE) {
@@ -207,6 +230,16 @@ fun PlayerScreen(
         onDispose { exoPlayer.removeListener(listener) }
     }
 
+    val onTalkbackToggle: () -> Unit = {
+        if (state.hasMicPermission) {
+            scope.launch {
+                snackbarHostState.showSnackbar("Segure o botao de microfone para falar")
+            }
+        } else {
+            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     if (state.isFullscreen) {
         FullscreenPlayerContent(
             state = state,
@@ -214,6 +247,7 @@ fun PlayerScreen(
             snackbarHostState = snackbarHostState,
             viewModel = viewModel,
             onPlayerViewCreated = { playerViewRef = it },
+            onTalkbackToggle = onTalkbackToggle,
         )
     } else {
         Scaffold(
@@ -251,6 +285,7 @@ fun PlayerScreen(
                             exoPlayer = exoPlayer,
                             viewModel = viewModel,
                             onPlayerViewCreated = { playerViewRef = it },
+                            onTalkbackToggle = onTalkbackToggle,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(16f / 9f),
@@ -283,6 +318,7 @@ private fun FullscreenPlayerContent(
     snackbarHostState: SnackbarHostState,
     viewModel: PlayerViewModel,
     onPlayerViewCreated: (PlayerView) -> Unit,
+    onTalkbackToggle: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -294,6 +330,7 @@ private fun FullscreenPlayerContent(
             exoPlayer = exoPlayer,
             viewModel = viewModel,
             onPlayerViewCreated = onPlayerViewCreated,
+            onTalkbackToggle = onTalkbackToggle,
             modifier = Modifier.fillMaxSize(),
         )
         SnackbarHost(
@@ -310,6 +347,7 @@ private fun VideoSurface(
     exoPlayer: ExoPlayer,
     viewModel: PlayerViewModel,
     onPlayerViewCreated: (PlayerView) -> Unit,
+    onTalkbackToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -364,6 +402,17 @@ private fun VideoSurface(
                 .padding(top = if (state.isFullscreen) Dimens.SpacingXxxl else Dimens.SpacingSm),
         )
 
+        // Talkback push-to-talk button (bottom-start)
+        TalkbackButton(
+            isActive = state.isTalkbackActive,
+            isVisible = state.talkbackAvailable && state.hasMicPermission && state.talkbackEnabled,
+            onPress = viewModel::onTalkbackPress,
+            onRelease = viewModel::onTalkbackRelease,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp),
+        )
+
         // PTZ control pad (center-left)
         PtzControlPad(
             isVisible = state.showPtzControls && state.isPtzConnected,
@@ -384,6 +433,8 @@ private fun VideoSurface(
             showPtzControls = state.showPtzControls,
             isDetectionActive = state.isDetectionActive,
             detectionEnabled = state.detectionEnabled,
+            isTalkbackActive = state.isTalkbackActive,
+            talkbackAvailable = state.talkbackAvailable && state.talkbackEnabled,
             cameraName = state.camera?.name ?: "",
             onBackClick = viewModel::onBack,
             onPlayPauseClick = {
@@ -396,6 +447,7 @@ private fun VideoSurface(
             onPtzToggle = viewModel::onTogglePtzControls,
             onInfoClick = viewModel::onToggleStreamInfo,
             onDetectionToggle = viewModel::onToggleDetection,
+            onTalkbackToggle = onTalkbackToggle,
             modifier = if (state.isFullscreen) {
                 Modifier
                     .fillMaxSize()

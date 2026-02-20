@@ -19,4 +19,5 @@ data class UserPreferences(
     val detectAnimals: Boolean = false,
     val notifyPersonDetected: Boolean = false,
     val detectionIntervalMs: Long = 750L,
+    val talkbackEnabled: Boolean = true,
 )

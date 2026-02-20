@@ -106,6 +106,10 @@ class SettingsViewModel @Inject constructor(
         preferencesRepository.updateDetectionIntervalMs(intervalMs)
     }
 
+    fun onTalkbackEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateTalkbackEnabled(enabled)
+    }
+
     fun onClearCacheRequest() = intent {
         reduce { state.copy(showClearCacheConfirmation = true) }
     }

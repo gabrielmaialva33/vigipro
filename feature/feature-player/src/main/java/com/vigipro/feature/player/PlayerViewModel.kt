@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vigipro.core.data.audio.AudioCaptureManager
 import com.vigipro.core.data.detection.FrameCaptureHelper
 import com.vigipro.core.data.detection.ObjectDetectionEngine
 import com.vigipro.core.data.notification.CameraNotificationHelper
@@ -47,6 +48,10 @@ data class PlayerState(
     val detectedObjects: List<DetectedObject> = emptyList(),
     val isDetectionActive: Boolean = false,
     val detectionEnabled: Boolean = false,
+    val isTalkbackActive: Boolean = false,
+    val talkbackAvailable: Boolean = false,
+    val hasMicPermission: Boolean = false,
+    val talkbackEnabled: Boolean = true,
 )
 
 sealed interface PlayerSideEffect {
@@ -55,6 +60,7 @@ sealed interface PlayerSideEffect {
     data object RequestSnapshot : PlayerSideEffect
     data class ShareSnapshot(val uri: Uri) : PlayerSideEffect
     data class ShowSnackbar(val message: String) : PlayerSideEffect
+    data object RequestMicPermission : PlayerSideEffect
 }
 
 @HiltViewModel
@@ -66,11 +72,13 @@ class PlayerViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val detectionEngine: ObjectDetectionEngine,
     private val notificationHelper: CameraNotificationHelper,
+    private val audioCaptureManager: AudioCaptureManager,
 ) : ViewModel(), ContainerHost<PlayerState, PlayerSideEffect> {
 
     private val cameraId: String = checkNotNull(savedStateHandle["cameraId"])
     private var controlsHideJob: Job? = null
     private var detectionJob: Job? = null
+    private var talkbackJob: Job? = null
     private var surfaceViewRef: SurfaceView? = null
     private var lastEventLogTime = 0L
     private var lastNotificationTime = 0L
@@ -79,6 +87,7 @@ class PlayerViewModel @Inject constructor(
         loadCamera()
         loadAudioPreference()
         loadDetectionPreference()
+        loadTalkbackPreference()
     }
 
     override fun onCleared() {
@@ -86,6 +95,7 @@ class PlayerViewModel @Inject constructor(
         ptzClient.disconnect()
         stopDetection()
         detectionEngine.release()
+        stopTalkback()
     }
 
     private fun loadCamera() = intent {
@@ -93,7 +103,13 @@ class PlayerViewModel @Inject constructor(
         if (camera == null) {
             reduce { state.copy(isLoading = false, errorMessage = "Camera nao encontrada") }
         } else {
-            reduce { state.copy(camera = camera, isLoading = false) }
+            reduce {
+                state.copy(
+                    camera = camera,
+                    isLoading = false,
+                    talkbackAvailable = camera.audioCapable,
+                )
+            }
             if (camera.ptzCapable && camera.onvifAddress != null) {
                 connectPtz(camera)
             }
@@ -318,6 +334,53 @@ class PlayerViewModel @Inject constructor(
     fun stopDetection() {
         detectionJob?.cancel()
         detectionJob = null
+    }
+
+    // Talkback
+    private fun loadTalkbackPreference() = intent {
+        preferencesRepository.userPreferences.collect { prefs ->
+            reduce { state.copy(talkbackEnabled = prefs.talkbackEnabled) }
+        }
+    }
+
+    fun onMicPermissionResult(granted: Boolean) = intent {
+        reduce { state.copy(hasMicPermission = granted) }
+    }
+
+    fun onTalkbackPress() {
+        val camera = container.stateFlow.value.camera ?: return
+        val rtspUrl = camera.rtspUrl ?: return
+
+        talkbackJob?.cancel()
+        talkbackJob = viewModelScope.launch {
+            val connected = audioCaptureManager.connectToCamera(
+                rtspUrl = rtspUrl,
+                username = camera.username ?: "",
+                password = "",
+            )
+            if (!connected) {
+                intent { postSideEffect(PlayerSideEffect.ShowSnackbar("Falha ao conectar audio bidirecional")) }
+                return@launch
+            }
+            intent { reduce { state.copy(isTalkbackActive = true) } }
+            audioCaptureManager.startCapture() // blocks until stopped
+        }
+    }
+
+    fun onTalkbackRelease() {
+        audioCaptureManager.stopCapture()
+        talkbackJob?.cancel()
+        talkbackJob = null
+        viewModelScope.launch {
+            audioCaptureManager.disconnect()
+            intent { reduce { state.copy(isTalkbackActive = false) } }
+        }
+    }
+
+    private fun stopTalkback() {
+        audioCaptureManager.stopCapture()
+        talkbackJob?.cancel()
+        talkbackJob = null
     }
 
     fun onBack() = intent {

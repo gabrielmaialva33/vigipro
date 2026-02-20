@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeOff
@@ -51,6 +53,8 @@ fun PlayerControlsOverlay(
     showPtzControls: Boolean,
     isDetectionActive: Boolean,
     detectionEnabled: Boolean,
+    isTalkbackActive: Boolean,
+    talkbackAvailable: Boolean,
     cameraName: String,
     onBackClick: () -> Unit,
     onPlayPauseClick: () -> Unit,
@@ -60,6 +64,7 @@ fun PlayerControlsOverlay(
     onPtzToggle: () -> Unit,
     onInfoClick: () -> Unit,
     onDetectionToggle: () -> Unit,
+    onTalkbackToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -147,6 +152,18 @@ fun PlayerControlsOverlay(
                                     if (isDetectionActive) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     if (isDetectionActive) "Desativar deteccao" else "Ativar deteccao",
                                     tint = if (isDetectionActive) Color(0xFFFF9800) else Color.White,
+                                )
+                            },
+                        )
+                    }
+                    if (talkbackAvailable) {
+                        OverlayIconButton(
+                            onClick = onTalkbackToggle,
+                            icon = {
+                                Icon(
+                                    if (isTalkbackActive) Icons.Default.Mic else Icons.Default.MicOff,
+                                    if (isTalkbackActive) "Audio bidirecional ativo" else "Ativar audio bidirecional",
+                                    tint = if (isTalkbackActive) Color(0xFFD32F2F) else Color.White,
                                 )
                             },
                         )
