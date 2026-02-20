@@ -206,6 +206,67 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                // Deteccao Inteligente
+                SettingsSection(title = "DETECCAO INTELIGENTE") {
+                    SettingsToggleItem(
+                        title = "Deteccao de objetos",
+                        subtitle = "Ativar deteccao por IA no player de video",
+                        checked = state.preferences.detectionEnabled,
+                        onCheckedChange = viewModel::onDetectionEnabledChange,
+                    )
+                    if (state.preferences.detectionEnabled) {
+                        SettingsDropdownItem(
+                            title = "Sensibilidade",
+                            subtitle = "Nivel de confianca minimo para deteccao",
+                            currentValue = state.preferences.detectionConfidenceThreshold,
+                            options = listOf(0.3f, 0.5f, 0.7f, 0.85f),
+                            onValueChange = viewModel::onDetectionConfidenceChange,
+                            displayMapper = { threshold ->
+                                "${(threshold * 100).toInt()}%"
+                            },
+                        )
+                        SettingsDropdownItem(
+                            title = "Frequencia de analise",
+                            subtitle = "Intervalo entre cada analise de frame",
+                            currentValue = state.preferences.detectionIntervalMs,
+                            options = listOf(500L, 750L, 1000L, 1500L),
+                            onValueChange = viewModel::onDetectionIntervalChange,
+                            displayMapper = { ms ->
+                                when (ms) {
+                                    500L -> "500ms (rapido)"
+                                    750L -> "750ms (padrao)"
+                                    1000L -> "1 segundo"
+                                    1500L -> "1.5 segundos"
+                                    else -> "${ms}ms"
+                                }
+                            },
+                        )
+                        SettingsToggleItem(
+                            title = "Detectar pessoas",
+                            checked = state.preferences.detectPersons,
+                            onCheckedChange = viewModel::onDetectPersonsChange,
+                        )
+                        SettingsToggleItem(
+                            title = "Detectar veiculos",
+                            checked = state.preferences.detectVehicles,
+                            onCheckedChange = viewModel::onDetectVehiclesChange,
+                        )
+                        SettingsToggleItem(
+                            title = "Detectar animais",
+                            checked = state.preferences.detectAnimals,
+                            onCheckedChange = viewModel::onDetectAnimalsChange,
+                        )
+                        SettingsToggleItem(
+                            title = "Notificar pessoa detectada",
+                            subtitle = "Receber alerta quando uma pessoa for detectada",
+                            checked = state.preferences.notifyPersonDetected,
+                            onCheckedChange = viewModel::onNotifyPersonDetectedChange,
+                        )
+                    }
+                }
+
+                HorizontalDivider()
+
                 // Capturas
                 SettingsSection(title = "CAPTURAS") {
                     SettingsToggleItem(

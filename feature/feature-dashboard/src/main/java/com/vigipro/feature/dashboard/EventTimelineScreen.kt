@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberNew
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -218,6 +219,11 @@ private fun eventVisuals(type: CameraEventType): EventVisuals = when (type) {
         icon = Icons.Default.Delete,
         color = Color(0xFFE64A19),
         label = "Camera removida",
+    )
+    CameraEventType.OBJECT_DETECTED -> EventVisuals(
+        icon = Icons.Default.Visibility,
+        color = Color(0xFFFF5722),
+        label = "Objeto detectado",
     )
 }
 

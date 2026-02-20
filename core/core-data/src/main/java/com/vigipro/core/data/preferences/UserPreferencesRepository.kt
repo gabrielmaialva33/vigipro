@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -26,6 +27,13 @@ interface UserPreferencesRepository {
     suspend fun updateNotifyOffline(enabled: Boolean)
     suspend fun updateNotifyOnline(enabled: Boolean)
     suspend fun updateWatermarkEnabled(enabled: Boolean)
+    suspend fun updateDetectionEnabled(enabled: Boolean)
+    suspend fun updateDetectionConfidenceThreshold(threshold: Float)
+    suspend fun updateDetectPersons(enabled: Boolean)
+    suspend fun updateDetectVehicles(enabled: Boolean)
+    suspend fun updateDetectAnimals(enabled: Boolean)
+    suspend fun updateNotifyPersonDetected(enabled: Boolean)
+    suspend fun updateDetectionIntervalMs(intervalMs: Long)
     suspend fun clearCache()
 }
 
@@ -43,6 +51,13 @@ class LocalUserPreferencesRepository @Inject constructor(
         val NOTIFY_OFFLINE = booleanPreferencesKey("notify_offline")
         val NOTIFY_ONLINE = booleanPreferencesKey("notify_online")
         val WATERMARK_ENABLED = booleanPreferencesKey("watermark_enabled")
+        val DETECTION_ENABLED = booleanPreferencesKey("detection_enabled")
+        val DETECTION_CONFIDENCE = floatPreferencesKey("detection_confidence")
+        val DETECT_PERSONS = booleanPreferencesKey("detect_persons")
+        val DETECT_VEHICLES = booleanPreferencesKey("detect_vehicles")
+        val DETECT_ANIMALS = booleanPreferencesKey("detect_animals")
+        val NOTIFY_PERSON_DETECTED = booleanPreferencesKey("notify_person_detected")
+        val DETECTION_INTERVAL = longPreferencesKey("detection_interval_ms")
     }
 
     override val userPreferences: Flow<UserPreferences> = dataStore.data
@@ -68,6 +83,13 @@ class LocalUserPreferencesRepository @Inject constructor(
                 notifyOffline = prefs[Keys.NOTIFY_OFFLINE] ?: true,
                 notifyOnline = prefs[Keys.NOTIFY_ONLINE] ?: false,
                 watermarkEnabled = prefs[Keys.WATERMARK_ENABLED] ?: true,
+                detectionEnabled = prefs[Keys.DETECTION_ENABLED] ?: false,
+                detectionConfidenceThreshold = prefs[Keys.DETECTION_CONFIDENCE] ?: 0.5f,
+                detectPersons = prefs[Keys.DETECT_PERSONS] ?: true,
+                detectVehicles = prefs[Keys.DETECT_VEHICLES] ?: true,
+                detectAnimals = prefs[Keys.DETECT_ANIMALS] ?: false,
+                notifyPersonDetected = prefs[Keys.NOTIFY_PERSON_DETECTED] ?: false,
+                detectionIntervalMs = prefs[Keys.DETECTION_INTERVAL] ?: 750L,
             )
         }
 
@@ -111,6 +133,34 @@ class LocalUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateWatermarkEnabled(enabled: Boolean) {
         safeEdit { it[Keys.WATERMARK_ENABLED] = enabled }
+    }
+
+    override suspend fun updateDetectionEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.DETECTION_ENABLED] = enabled }
+    }
+
+    override suspend fun updateDetectionConfidenceThreshold(threshold: Float) {
+        safeEdit { it[Keys.DETECTION_CONFIDENCE] = threshold.coerceIn(0.1f, 0.95f) }
+    }
+
+    override suspend fun updateDetectPersons(enabled: Boolean) {
+        safeEdit { it[Keys.DETECT_PERSONS] = enabled }
+    }
+
+    override suspend fun updateDetectVehicles(enabled: Boolean) {
+        safeEdit { it[Keys.DETECT_VEHICLES] = enabled }
+    }
+
+    override suspend fun updateDetectAnimals(enabled: Boolean) {
+        safeEdit { it[Keys.DETECT_ANIMALS] = enabled }
+    }
+
+    override suspend fun updateNotifyPersonDetected(enabled: Boolean) {
+        safeEdit { it[Keys.NOTIFY_PERSON_DETECTED] = enabled }
+    }
+
+    override suspend fun updateDetectionIntervalMs(intervalMs: Long) {
+        safeEdit { it[Keys.DETECTION_INTERVAL] = intervalMs.coerceIn(500L, 2000L) }
     }
 
     override suspend fun clearCache() {

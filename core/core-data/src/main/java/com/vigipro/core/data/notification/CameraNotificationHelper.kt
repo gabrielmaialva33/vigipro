@@ -28,6 +28,15 @@ class CameraNotificationHelper @Inject constructor(
             description = "Notificacoes quando cameras ficam offline ou retornam"
         }
         notificationManager.createNotificationChannel(alertChannel)
+
+        val detectionChannel = NotificationChannel(
+            CHANNEL_DETECTION_ALERTS,
+            "Alertas de Deteccao",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Notificacoes quando objetos sao detectados pela IA"
+        }
+        notificationManager.createNotificationChannel(detectionChannel)
     }
 
     fun notifyCameraOffline(cameraId: String, cameraName: String) {
@@ -52,7 +61,24 @@ class CameraNotificationHelper @Inject constructor(
         notificationManager.notify(cameraId.hashCode(), notification)
     }
 
+    fun notifyPersonDetected(cameraId: String, cameraName: String, count: Int = 1) {
+        val text = if (count > 1) {
+            "$count pessoas detectadas em $cameraName"
+        } else {
+            "Pessoa detectada em $cameraName"
+        }
+        val notification = NotificationCompat.Builder(context, CHANNEL_DETECTION_ALERTS)
+            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setContentTitle("Pessoa Detectada")
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        notificationManager.notify("detection_${cameraId}".hashCode(), notification)
+    }
+
     companion object {
         const val CHANNEL_CAMERA_ALERTS = "camera_alerts"
+        const val CHANNEL_DETECTION_ALERTS = "detection_alerts"
     }
 }

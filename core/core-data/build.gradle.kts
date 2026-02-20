@@ -25,6 +25,9 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // ML Kit Object Detection
+    implementation(libs.mlkit.od.custom)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

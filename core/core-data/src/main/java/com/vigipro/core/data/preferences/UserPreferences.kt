@@ -12,4 +12,11 @@ data class UserPreferences(
     val notifyOffline: Boolean = true,
     val notifyOnline: Boolean = false,
     val watermarkEnabled: Boolean = true,
+    val detectionEnabled: Boolean = false,
+    val detectionConfidenceThreshold: Float = 0.5f,
+    val detectPersons: Boolean = true,
+    val detectVehicles: Boolean = true,
+    val detectAnimals: Boolean = false,
+    val notifyPersonDetected: Boolean = false,
+    val detectionIntervalMs: Long = 750L,
 )

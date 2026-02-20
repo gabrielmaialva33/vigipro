@@ -9,6 +9,7 @@ enum class CameraEventType {
     SNAPSHOT_TAKEN,
     CAMERA_ADDED,
     CAMERA_REMOVED,
+    OBJECT_DETECTED,
 }
 
 data class CameraEvent(

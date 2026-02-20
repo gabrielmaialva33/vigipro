@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
@@ -47,6 +49,8 @@ fun PlayerControlsOverlay(
     isAudioEnabled: Boolean,
     isPtzCapable: Boolean,
     showPtzControls: Boolean,
+    isDetectionActive: Boolean,
+    detectionEnabled: Boolean,
     cameraName: String,
     onBackClick: () -> Unit,
     onPlayPauseClick: () -> Unit,
@@ -55,6 +59,7 @@ fun PlayerControlsOverlay(
     onSnapshotClick: () -> Unit,
     onPtzToggle: () -> Unit,
     onInfoClick: () -> Unit,
+    onDetectionToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -130,6 +135,18 @@ fun PlayerControlsOverlay(
                                     Icons.Default.OpenWith,
                                     if (showPtzControls) "Ocultar controle PTZ" else "Mostrar controle PTZ",
                                     tint = if (showPtzControls) MaterialTheme.colorScheme.primary else Color.White,
+                                )
+                            },
+                        )
+                    }
+                    if (detectionEnabled) {
+                        OverlayIconButton(
+                            onClick = onDetectionToggle,
+                            icon = {
+                                Icon(
+                                    if (isDetectionActive) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    if (isDetectionActive) "Desativar deteccao" else "Ativar deteccao",
+                                    tint = if (isDetectionActive) Color(0xFFFF9800) else Color.White,
                                 )
                             },
                         )

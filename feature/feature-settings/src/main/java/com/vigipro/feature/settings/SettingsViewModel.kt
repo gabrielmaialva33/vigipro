@@ -78,6 +78,34 @@ class SettingsViewModel @Inject constructor(
         preferencesRepository.updateWatermarkEnabled(enabled)
     }
 
+    fun onDetectionEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateDetectionEnabled(enabled)
+    }
+
+    fun onDetectionConfidenceChange(threshold: Float) = intent {
+        preferencesRepository.updateDetectionConfidenceThreshold(threshold)
+    }
+
+    fun onDetectPersonsChange(enabled: Boolean) = intent {
+        preferencesRepository.updateDetectPersons(enabled)
+    }
+
+    fun onDetectVehiclesChange(enabled: Boolean) = intent {
+        preferencesRepository.updateDetectVehicles(enabled)
+    }
+
+    fun onDetectAnimalsChange(enabled: Boolean) = intent {
+        preferencesRepository.updateDetectAnimals(enabled)
+    }
+
+    fun onNotifyPersonDetectedChange(enabled: Boolean) = intent {
+        preferencesRepository.updateNotifyPersonDetected(enabled)
+    }
+
+    fun onDetectionIntervalChange(intervalMs: Long) = intent {
+        preferencesRepository.updateDetectionIntervalMs(intervalMs)
+    }
+
     fun onClearCacheRequest() = intent {
         reduce { state.copy(showClearCacheConfirmation = true) }
     }

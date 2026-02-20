@@ -1,6 +1,7 @@
 package com.vigipro.feature.player
 
 import android.content.Intent
+import android.view.SurfaceView
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
@@ -50,6 +51,7 @@ import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.components.VigiProTopBar
 import com.vigipro.core.ui.theme.Dimens
 import com.vigipro.feature.player.snapshot.SnapshotManager
+import com.vigipro.feature.player.ui.DetectionOverlay
 import com.vigipro.feature.player.ui.PlayerControlsOverlay
 import com.vigipro.feature.player.ui.PtzControlPad
 import com.vigipro.feature.player.ui.StreamInfoOverlay
@@ -137,7 +139,10 @@ fun PlayerScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> exoPlayer.pause()
+                Lifecycle.Event.ON_PAUSE -> {
+                    exoPlayer.pause()
+                    viewModel.stopDetection()
+                }
                 Lifecycle.Event.ON_RESUME -> {
                     if (exoPlayer.playbackState != Player.STATE_IDLE) {
                         exoPlayer.play()
@@ -329,11 +334,19 @@ private fun VideoSurface(
             update = { view ->
                 view.player = exoPlayer
                 onPlayerViewCreated(view)
+                viewModel.setSurfaceView(view.videoSurfaceView as? SurfaceView)
             },
             onRelease = { view ->
                 view.player = null
+                viewModel.setSurfaceView(null)
             },
             modifier = Modifier.fillMaxSize(),
+        )
+
+        // Detection overlay (bounding boxes + AI badge)
+        DetectionOverlay(
+            detectedObjects = state.detectedObjects,
+            isActive = state.isDetectionActive,
         )
 
         // Buffering indicator
@@ -369,6 +382,8 @@ private fun VideoSurface(
             isAudioEnabled = state.isAudioEnabled,
             isPtzCapable = state.camera?.ptzCapable == true && state.isPtzConnected,
             showPtzControls = state.showPtzControls,
+            isDetectionActive = state.isDetectionActive,
+            detectionEnabled = state.detectionEnabled,
             cameraName = state.camera?.name ?: "",
             onBackClick = viewModel::onBack,
             onPlayPauseClick = {
@@ -380,6 +395,7 @@ private fun VideoSurface(
             onSnapshotClick = viewModel::onSnapshot,
             onPtzToggle = viewModel::onTogglePtzControls,
             onInfoClick = viewModel::onToggleStreamInfo,
+            onDetectionToggle = viewModel::onToggleDetection,
             modifier = if (state.isFullscreen) {
                 Modifier
                     .fillMaxSize()
