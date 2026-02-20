@@ -26,6 +26,10 @@ data class AccessControlState(
     val inviteRole: UserRole = UserRole.VIEWER,
     val inviteExpiresHours: Int = 24,
     val inviteMaxUses: Int = 1,
+    // Time window (for TIME_RESTRICTED)
+    val timeStart: String = "",
+    val timeEnd: String = "",
+    val selectedDays: List<Int> = listOf(1, 2, 3, 4, 5),
     // Invite result
     val createdInviteCode: String? = null,
     // Redeem
@@ -106,6 +110,18 @@ class AccessControlViewModel @Inject constructor(
 
     fun onInviteMaxUsesChange(maxUses: Int) = intent {
         reduce { state.copy(inviteMaxUses = maxUses) }
+    }
+
+    fun onTimeStartChange(time: String) = intent {
+        reduce { state.copy(timeStart = time) }
+    }
+
+    fun onTimeEndChange(time: String) = intent {
+        reduce { state.copy(timeEnd = time) }
+    }
+
+    fun onSelectedDaysChange(days: List<Int>) = intent {
+        reduce { state.copy(selectedDays = days) }
     }
 
     fun onCreateInvite() = intent {

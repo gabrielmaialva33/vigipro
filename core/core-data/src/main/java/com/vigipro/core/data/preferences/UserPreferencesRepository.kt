@@ -23,6 +23,9 @@ interface UserPreferencesRepository {
     suspend fun updateAudioEnabled(enabled: Boolean)
     suspend fun updateMonitorInterval(intervalMs: Long)
     suspend fun updateThemeMode(mode: ThemeMode)
+    suspend fun updateNotifyOffline(enabled: Boolean)
+    suspend fun updateNotifyOnline(enabled: Boolean)
+    suspend fun updateWatermarkEnabled(enabled: Boolean)
     suspend fun clearCache()
 }
 
@@ -37,6 +40,9 @@ class LocalUserPreferencesRepository @Inject constructor(
         val AUDIO_ENABLED = booleanPreferencesKey("audio_enabled_default")
         val MONITOR_INTERVAL = longPreferencesKey("monitor_interval_ms")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val NOTIFY_OFFLINE = booleanPreferencesKey("notify_offline")
+        val NOTIFY_ONLINE = booleanPreferencesKey("notify_online")
+        val WATERMARK_ENABLED = booleanPreferencesKey("watermark_enabled")
     }
 
     override val userPreferences: Flow<UserPreferences> = dataStore.data
@@ -59,6 +65,9 @@ class LocalUserPreferencesRepository @Inject constructor(
                 themeMode = prefs[Keys.THEME_MODE]?.let {
                     runCatching { ThemeMode.valueOf(it) }.getOrNull()
                 } ?: ThemeMode.SYSTEM,
+                notifyOffline = prefs[Keys.NOTIFY_OFFLINE] ?: true,
+                notifyOnline = prefs[Keys.NOTIFY_ONLINE] ?: false,
+                watermarkEnabled = prefs[Keys.WATERMARK_ENABLED] ?: true,
             )
         }
 
@@ -90,6 +99,18 @@ class LocalUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateThemeMode(mode: ThemeMode) {
         safeEdit { it[Keys.THEME_MODE] = mode.name }
+    }
+
+    override suspend fun updateNotifyOffline(enabled: Boolean) {
+        safeEdit { it[Keys.NOTIFY_OFFLINE] = enabled }
+    }
+
+    override suspend fun updateNotifyOnline(enabled: Boolean) {
+        safeEdit { it[Keys.NOTIFY_ONLINE] = enabled }
+    }
+
+    override suspend fun updateWatermarkEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.WATERMARK_ENABLED] = enabled }
     }
 
     override suspend fun clearCache() {

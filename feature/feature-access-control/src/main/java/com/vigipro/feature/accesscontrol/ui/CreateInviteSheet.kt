@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -17,6 +20,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.vigipro.core.model.UserRole
+import com.vigipro.core.ui.components.TimeWindowPicker
 import com.vigipro.core.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,14 +29,20 @@ fun CreateInviteSheet(
     inviteRole: UserRole,
     inviteExpiresHours: Int,
     inviteMaxUses: Int,
+    timeStart: String,
+    timeEnd: String,
+    selectedDays: List<Int>,
     onRoleChange: (UserRole) -> Unit,
     onExpiresChange: (Int) -> Unit,
     onMaxUsesChange: (Int) -> Unit,
+    onTimeStartChange: (String) -> Unit,
+    onTimeEndChange: (String) -> Unit,
+    onDaysChange: (List<Int>) -> Unit,
     onCreate: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -42,7 +52,8 @@ fun CreateInviteSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
+                .verticalScroll(rememberScrollState()),
         ) {
             Text(
                 text = "Criar Convite",
@@ -73,7 +84,21 @@ fun CreateInviteSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+            // Time window (only for TIME_RESTRICTED role)
+            if (inviteRole == UserRole.TIME_RESTRICTED) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.SpacingSm))
+
+                TimeWindowPicker(
+                    timeStart = timeStart,
+                    timeEnd = timeEnd,
+                    selectedDays = selectedDays,
+                    onTimeStartChange = onTimeStartChange,
+                    onTimeEndChange = onTimeEndChange,
+                    onDaysChange = onDaysChange,
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.SpacingSm))
 
             // Expiration
             Text(

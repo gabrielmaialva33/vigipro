@@ -190,6 +190,30 @@ fun SettingsScreen(
                             }
                         },
                     )
+                    SettingsToggleItem(
+                        title = "Notificar camera offline",
+                        subtitle = "Receber alerta quando uma camera perder conexao",
+                        checked = state.preferences.notifyOffline,
+                        onCheckedChange = viewModel::onNotifyOfflineChange,
+                    )
+                    SettingsToggleItem(
+                        title = "Notificar camera restaurada",
+                        subtitle = "Receber alerta quando uma camera voltar a funcionar",
+                        checked = state.preferences.notifyOnline,
+                        onCheckedChange = viewModel::onNotifyOnlineChange,
+                    )
+                }
+
+                HorizontalDivider()
+
+                // Capturas
+                SettingsSection(title = "CAPTURAS") {
+                    SettingsToggleItem(
+                        title = "Marca d'agua em capturas",
+                        subtitle = "Adicionar nome da camera e horario nas capturas",
+                        checked = state.preferences.watermarkEnabled,
+                        onCheckedChange = viewModel::onWatermarkEnabledChange,
+                    )
                 }
 
                 HorizontalDivider()

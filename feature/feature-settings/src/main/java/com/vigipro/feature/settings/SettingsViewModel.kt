@@ -66,6 +66,18 @@ class SettingsViewModel @Inject constructor(
         preferencesRepository.updateThemeMode(mode)
     }
 
+    fun onNotifyOfflineChange(enabled: Boolean) = intent {
+        preferencesRepository.updateNotifyOffline(enabled)
+    }
+
+    fun onNotifyOnlineChange(enabled: Boolean) = intent {
+        preferencesRepository.updateNotifyOnline(enabled)
+    }
+
+    fun onWatermarkEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateWatermarkEnabled(enabled)
+    }
+
     fun onClearCacheRequest() = intent {
         reduce { state.copy(showClearCacheConfirmation = true) }
     }

@@ -10,6 +10,7 @@ import androidx.navigation.navDeepLink
 import com.vigipro.feature.accesscontrol.AccessControlScreen
 import com.vigipro.feature.auth.LoginScreen
 import com.vigipro.feature.dashboard.DashboardScreen
+import com.vigipro.feature.dashboard.EventTimelineScreen
 import com.vigipro.feature.devices.addcamera.AddCameraScreen
 import com.vigipro.feature.player.PlayerScreen
 import com.vigipro.feature.settings.SettingsScreen
@@ -49,6 +50,9 @@ fun VigiProNavHost() {
                 onNavigateToAccessControl = {
                     navController.navigate("access_control")
                 },
+                onNavigateToEventTimeline = {
+                    navController.navigate("event_timeline")
+                },
             )
         }
 
@@ -86,6 +90,12 @@ fun VigiProNavHost() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
+            )
+        }
+
+        composable("event_timeline") {
+            EventTimelineScreen(
+                onBack = { navController.popBackStack() },
             )
         }
 

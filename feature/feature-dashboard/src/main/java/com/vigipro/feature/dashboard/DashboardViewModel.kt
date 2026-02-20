@@ -28,6 +28,7 @@ sealed interface DashboardSideEffect {
     data class NavigateToEditCamera(val cameraId: String) : DashboardSideEffect
     data object NavigateToSettings : DashboardSideEffect
     data object NavigateToAccessControl : DashboardSideEffect
+    data object NavigateToEventTimeline : DashboardSideEffect
 }
 
 @HiltViewModel
@@ -115,5 +116,9 @@ class DashboardViewModel @Inject constructor(
 
     fun onGridLayoutChange(layout: GridLayout) = intent {
         reduce { state.copy(gridLayout = layout) }
+    }
+
+    fun onEventTimelineClick() = intent {
+        postSideEffect(DashboardSideEffect.NavigateToEventTimeline)
     }
 }

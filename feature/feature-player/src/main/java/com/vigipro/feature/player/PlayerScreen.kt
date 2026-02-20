@@ -90,7 +90,12 @@ fun PlayerScreen(
             }
             PlayerSideEffect.RequestSnapshot -> {
                 scope.launch {
-                    val uri = playerViewRef?.let { snapshotManager.captureFrame(it) }
+                    val uri = playerViewRef?.let {
+                        snapshotManager.captureFrame(
+                            playerView = it,
+                            cameraName = state.camera?.name,
+                        )
+                    }
                     if (uri != null) {
                         viewModel.onSnapshotSaved(uri)
                     } else {

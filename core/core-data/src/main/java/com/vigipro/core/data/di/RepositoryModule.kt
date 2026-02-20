@@ -4,8 +4,10 @@ import com.vigipro.core.data.preferences.LocalUserPreferencesRepository
 import com.vigipro.core.data.preferences.UserPreferencesRepository
 import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.EventRepository
 import com.vigipro.core.data.repository.InvitationRepository
 import com.vigipro.core.data.repository.LocalCameraRepository
+import com.vigipro.core.data.repository.LocalEventRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.repository.SupabaseAuthRepository
 import com.vigipro.core.data.repository.SupabaseInvitationRepository
@@ -33,4 +35,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindInvitationRepository(impl: SupabaseInvitationRepository): InvitationRepository
+
+    @Binds
+    abstract fun bindEventRepository(impl: LocalEventRepository): EventRepository
 }

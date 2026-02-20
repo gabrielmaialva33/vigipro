@@ -3,6 +3,7 @@ package com.vigipro.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.vigipro.core.data.db.CameraDao
+import com.vigipro.core.data.db.CameraEventDao
 import com.vigipro.core.data.db.SiteDao
 import com.vigipro.core.data.db.VigiProDatabase
 import dagger.Module
@@ -24,7 +25,7 @@ object DatabaseModule {
             VigiProDatabase::class.java,
             "vigipro.db",
         )
-            .addMigrations(VigiProDatabase.MIGRATION_1_2)
+            .addMigrations(VigiProDatabase.MIGRATION_1_2, VigiProDatabase.MIGRATION_2_3)
             .build()
     }
 
@@ -36,5 +37,10 @@ object DatabaseModule {
     @Provides
     fun provideSiteDao(database: VigiProDatabase): SiteDao {
         return database.siteDao()
+    }
+
+    @Provides
+    fun provideCameraEventDao(database: VigiProDatabase): CameraEventDao {
+        return database.cameraEventDao()
     }
 }

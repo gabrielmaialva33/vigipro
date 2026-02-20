@@ -1,18 +1,28 @@
 package com.vigipro.feature.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideocamOff
@@ -33,7 +43,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vigipro.core.model.CameraStatus
 import com.vigipro.core.ui.components.CameraCard
@@ -56,6 +69,7 @@ fun DashboardScreen(
     onNavigateToEditCamera: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAccessControl: () -> Unit = {},
+    onNavigateToEventTimeline: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -69,6 +83,7 @@ fun DashboardScreen(
             is DashboardSideEffect.NavigateToEditCamera -> onNavigateToEditCamera(sideEffect.cameraId)
             DashboardSideEffect.NavigateToSettings -> onNavigateToSettings()
             DashboardSideEffect.NavigateToAccessControl -> onNavigateToAccessControl()
+            DashboardSideEffect.NavigateToEventTimeline -> onNavigateToEventTimeline()
         }
     }
 
@@ -122,6 +137,11 @@ fun DashboardScreen(
                         }
                     }
 
+                    // Event timeline
+                    IconButton(onClick = viewModel::onEventTimelineClick) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Eventos")
+                    }
+
                     // Access control
                     IconButton(onClick = viewModel::onAccessControlClick) {
                         Icon(Icons.Default.People, contentDescription = "Controle de acesso")
@@ -164,15 +184,56 @@ fun DashboardScreen(
                 )
             }
             else -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(state.gridLayout.columns),
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentPadding = PaddingValues(Dimens.GridCellSpacing),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
                 ) {
+                    // Health summary banner
+                    val onlineCount = state.cameras.count { it.status == CameraStatus.ONLINE }
+                    val totalCount = state.cameras.size
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (onlineCount == totalCount) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.error
+                                    },
+                                ),
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                        Text(
+                            text = "$onlineCount/$totalCount online",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (onlineCount == totalCount && totalCount > 0) {
+                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                            Text(
+                                text = "Tudo funcionando",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(state.gridLayout.columns),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(Dimens.GridCellSpacing),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
+                    ) {
                     items(state.cameras, key = { it.id }) { camera ->
                         var showMenu by remember { mutableStateOf(false) }
 
@@ -214,6 +275,7 @@ fun DashboardScreen(
                             }
                         }
                     }
+                }
                 }
             }
         }

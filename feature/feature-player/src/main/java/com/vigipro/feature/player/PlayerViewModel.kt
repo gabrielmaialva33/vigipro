@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.preferences.UserPreferencesRepository
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.EventRepository
 import com.vigipro.core.model.Camera
+import com.vigipro.core.model.CameraEventType
 import com.vigipro.feature.player.ptz.OnvifPtzClient
 import com.vigipro.feature.player.ptz.PtzPreset
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,6 +52,7 @@ class PlayerViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
     private val ptzClient: OnvifPtzClient,
     private val preferencesRepository: UserPreferencesRepository,
+    private val eventRepository: EventRepository,
 ) : ViewModel(), ContainerHost<PlayerState, PlayerSideEffect> {
 
     private val cameraId: String = checkNotNull(savedStateHandle["cameraId"])
@@ -166,6 +169,13 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun onSnapshotSaved(uri: Uri) = intent {
+        state.camera?.let { camera ->
+            eventRepository.logEvent(
+                cameraId = camera.id,
+                cameraName = camera.name,
+                type = CameraEventType.SNAPSHOT_TAKEN,
+            )
+        }
         postSideEffect(PlayerSideEffect.ShowSnackbar("Captura salva"))
         postSideEffect(PlayerSideEffect.ShareSnapshot(uri))
     }

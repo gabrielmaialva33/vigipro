@@ -9,4 +9,7 @@ data class UserPreferences(
     val audioEnabledByDefault: Boolean = false,
     val statusMonitorIntervalMs: Long = 60_000L,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val notifyOffline: Boolean = true,
+    val notifyOnline: Boolean = false,
+    val watermarkEnabled: Boolean = true,
 )
