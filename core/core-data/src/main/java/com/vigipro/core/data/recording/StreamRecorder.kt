@@ -158,10 +158,6 @@ class StreamRecorder @Inject constructor(
                 return false
             }
 
-            // Start drain loop
-            isRecording = true
-            recordingStartTime = System.currentTimeMillis()
-
             // Save to database
             recordingDbId = recordingRepository.startRecording(
                 cameraId = cameraId,
@@ -169,9 +165,14 @@ class StreamRecorder @Inject constructor(
                 filePath = file.absolutePath,
             )
 
+            // Start drain loop — assign drainJob BEFORE setting isRecording
+            // to avoid race condition where stopRecording() sees isRecording=true but drainJob=null
             drainJob = scope.launch(Dispatchers.IO) {
                 drainEncoderLoop()
             }
+
+            recordingStartTime = System.currentTimeMillis()
+            isRecording = true
 
             Log.d(TAG, "Gravacao iniciada: ${file.absolutePath}")
             true
@@ -315,13 +316,14 @@ class StreamRecorder @Inject constructor(
             player.addListener(listener)
 
             // Timeout after 15 seconds
-            scope.launch {
+            val timeoutJob = scope.launch {
                 delay(15_000L)
                 player.removeListener(listener)
                 if (cont.isActive) cont.resume(false)
             }
 
             cont.invokeOnCancellation {
+                timeoutJob.cancel()
                 player.removeListener(listener)
             }
         }

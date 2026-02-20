@@ -22,8 +22,9 @@ class WebhookExecutor @Inject constructor() {
         headers: Map<String, String> = emptyMap(),
         body: String? = null,
     ): WebhookResult = withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
         try {
-            val connection = URL(url).openConnection() as HttpURLConnection
+            connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = method
             connection.connectTimeout = 5000
             connection.readTimeout = 5000
@@ -33,10 +34,11 @@ class WebhookExecutor @Inject constructor() {
                 connection.outputStream.bufferedWriter().use { it.write(body) }
             }
             val code = connection.responseCode
-            connection.disconnect()
             WebhookResult(success = code in 200..299, statusCode = code)
         } catch (e: Exception) {
             WebhookResult(success = false, message = e.message ?: "Erro desconhecido")
+        } finally {
+            connection?.disconnect()
         }
     }
 }

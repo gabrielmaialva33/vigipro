@@ -37,7 +37,11 @@ fun PlaybackScreen(
 ) {
     val context = LocalContext.current
     val decodedFilePath = remember(filePath) {
-        URLDecoder.decode(filePath, "UTF-8")
+        try {
+            URLDecoder.decode(filePath, "UTF-8")
+        } catch (_: IllegalArgumentException) {
+            filePath
+        }
     }
 
     val exoPlayer = remember {

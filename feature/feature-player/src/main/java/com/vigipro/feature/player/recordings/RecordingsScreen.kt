@@ -67,19 +67,23 @@ fun RecordingsScreen(
         when (sideEffect) {
             is RecordingsSideEffect.NavigateToPlayback -> onNavigateToPlayback(sideEffect.filePath)
             is RecordingsSideEffect.ShareRecording -> {
-                val file = File(sideEffect.filePath)
-                if (file.exists()) {
-                    val uri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        file,
-                    )
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "video/*"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                try {
+                    val file = File(sideEffect.filePath)
+                    if (file.exists()) {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file,
+                        )
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "video/*"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Compartilhar gravacao"))
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Compartilhar gravacao"))
+                } catch (_: Exception) {
+                    // File may have been deleted between check and share
                 }
             }
             RecordingsSideEffect.NavigateBack -> onBack()
