@@ -1,5 +1,12 @@
 package com.vigipro.app.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +22,9 @@ import com.vigipro.feature.devices.addcamera.AddCameraScreen
 import com.vigipro.feature.player.PlayerScreen
 import com.vigipro.feature.settings.SettingsScreen
 
+private const val ANIM_DURATION = 350
+private val animEasing = FastOutSlowInEasing
+
 @Composable
 fun VigiProNavHost() {
     val navController = rememberNavController()
@@ -22,8 +32,39 @@ fun VigiProNavHost() {
     NavHost(
         navController = navController,
         startDestination = "login",
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(ANIM_DURATION, easing = animEasing),
+            ) + fadeIn(animationSpec = tween(ANIM_DURATION / 2, delayMillis = ANIM_DURATION / 4))
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(ANIM_DURATION, easing = animEasing),
+                targetOffset = { it / 5 },
+            ) + fadeOut(animationSpec = tween(ANIM_DURATION / 2))
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(ANIM_DURATION, easing = animEasing),
+                initialOffset = { it / 5 },
+            ) + fadeIn(animationSpec = tween(ANIM_DURATION / 2, delayMillis = ANIM_DURATION / 4))
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(ANIM_DURATION, easing = animEasing),
+            ) + fadeOut(animationSpec = tween(ANIM_DURATION / 2))
+        },
     ) {
-        composable("login") {
+        // Login — fade + scale (special transition)
+        composable(
+            route = "login",
+            enterTransition = { fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 1.08f) },
+        ) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("dashboard") {
@@ -56,9 +97,23 @@ fun VigiProNavHost() {
             )
         }
 
+        // Player — slide up (immersive feel)
         composable(
             route = "player/{cameraId}",
             arguments = listOf(navArgument("cameraId") { type = NavType.StringType }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(ANIM_DURATION, easing = animEasing),
+                ) + fadeIn(tween(ANIM_DURATION / 2))
+            },
+            exitTransition = { fadeOut(tween(200)) },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(ANIM_DURATION, easing = animEasing),
+                ) + fadeOut(tween(ANIM_DURATION / 2))
+            },
         ) {
             PlayerScreen(
                 onBack = { navController.popBackStack() },
@@ -112,7 +167,6 @@ fun VigiProNavHost() {
                 navDeepLink { uriPattern = "https://vigipro.app/invite/{code}" },
             ),
         ) {
-            // Redeem invite - for now redirect to access control
             AccessControlScreen(
                 onBack = { navController.popBackStack() },
             )

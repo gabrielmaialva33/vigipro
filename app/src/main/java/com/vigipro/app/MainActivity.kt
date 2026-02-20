@@ -1,6 +1,9 @@
 package com.vigipro.app
 
+import android.animation.ObjectAnimator
 import android.os.Bundle
+import android.view.View
+import android.view.animation.OvershootInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.animation.doOnEnd
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.vigipro.app.navigation.VigiProNavHost
 import com.vigipro.core.data.preferences.ThemeMode
 import com.vigipro.core.data.preferences.UserPreferences
@@ -25,6 +30,29 @@ class MainActivity : ComponentActivity() {
     lateinit var preferencesRepository: UserPreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
+        // Splash screen exit animation — scale + fade
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val scaleX = ObjectAnimator.ofFloat(splashScreenView.iconView, View.SCALE_X, 1f, 1.5f, 0f)
+            val scaleY = ObjectAnimator.ofFloat(splashScreenView.iconView, View.SCALE_Y, 1f, 1.5f, 0f)
+            val alpha = ObjectAnimator.ofFloat(splashScreenView.view, View.ALPHA, 1f, 0f)
+
+            scaleX.interpolator = OvershootInterpolator()
+            scaleY.interpolator = OvershootInterpolator()
+
+            scaleX.duration = 500L
+            scaleY.duration = 500L
+            alpha.duration = 400L
+            alpha.startDelay = 200L
+
+            alpha.doOnEnd { splashScreenView.remove() }
+
+            scaleX.start()
+            scaleY.start()
+            alpha.start()
+        }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

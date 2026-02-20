@@ -1,8 +1,11 @@
 package com.vigipro.core.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.vigipro.core.ui.theme.Dimens
 import com.vigipro.core.ui.theme.StatusBadgeShape
@@ -60,12 +65,17 @@ fun StatusBadge(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(Dimens.CameraStatusDotSize)
-                .clip(CircleShape)
-                .background(dotColor),
-        )
+        // Animated status dot
+        if (status == ConnectionStatus.ONLINE) {
+            PulsingStatusDot(color = dotColor)
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(Dimens.CameraStatusDotSize)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+        }
         if (showLabel) {
             Text(
                 text = label,
@@ -74,6 +84,41 @@ fun StatusBadge(
             )
         }
     }
+}
+
+@Composable
+private fun PulsingStatusDot(
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "statusPulse")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "dotScale",
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "dotAlpha",
+    )
+
+    Box(
+        modifier = modifier
+            .size(Dimens.CameraStatusDotSize)
+            .scale(scale)
+            .alpha(alpha)
+            .clip(CircleShape)
+            .background(color),
+    )
 }
 
 @Composable

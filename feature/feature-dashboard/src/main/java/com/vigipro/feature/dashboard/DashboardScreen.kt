@@ -1,5 +1,13 @@
 package com.vigipro.feature.dashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -189,27 +197,30 @@ fun DashboardScreen(
                         .fillMaxSize()
                         .padding(padding),
                 ) {
-                    // Health summary banner
+                    // Health summary banner with animated visibility
                     val onlineCount = state.cameras.count { it.status == CameraStatus.ONLINE }
                     val totalCount = state.cameras.size
+                    val allHealthy = onlineCount == totalCount && totalCount > 0
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .animateContentSize(animationSpec = tween(300))
                             .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Animated health dot
+                        val dotColor = if (allHealthy) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    if (onlineCount == totalCount) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.error
-                                    },
-                                ),
+                                .background(dotColor),
                         )
                         Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
@@ -217,13 +228,20 @@ fun DashboardScreen(
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (onlineCount == totalCount && totalCount > 0) {
-                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
-                            Text(
-                                text = "Tudo funcionando",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+
+                        AnimatedVisibility(
+                            visible = allHealthy,
+                            enter = fadeIn(tween(500)) + expandVertically(),
+                            exit = fadeOut(tween(300)) + shrinkVertically(),
+                        ) {
+                            Row {
+                                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                                Text(
+                                    text = "Tudo funcionando",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                     }
 
@@ -234,48 +252,48 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
                         verticalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
                     ) {
-                    items(state.cameras, key = { it.id }) { camera ->
-                        var showMenu by remember { mutableStateOf(false) }
+                        items(state.cameras, key = { it.id }) { camera ->
+                            var showMenu by remember { mutableStateOf(false) }
 
-                        Box {
-                            CameraCard(
-                                name = camera.name,
-                                status = camera.status.toConnectionStatus(),
-                                thumbnailUrl = camera.thumbnailUrl,
-                                onClick = { viewModel.onCameraClick(camera.id) },
-                                onLongClick = { showMenu = true },
-                                ptzCapable = camera.ptzCapable,
-                                audioCapable = camera.audioCapable,
-                            )
+                            Box(modifier = Modifier.animateItem()) {
+                                CameraCard(
+                                    name = camera.name,
+                                    status = camera.status.toConnectionStatus(),
+                                    thumbnailUrl = camera.thumbnailUrl,
+                                    onClick = { viewModel.onCameraClick(camera.id) },
+                                    onLongClick = { showMenu = true },
+                                    ptzCapable = camera.ptzCapable,
+                                    audioCapable = camera.audioCapable,
+                                )
 
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false },
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Editar") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.onEditCameraClick(camera.id)
-                                    },
-                                    leadingIcon = { Icon(Icons.Default.Edit, null) },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Excluir") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.onDeleteCameraClick(camera.id)
-                                    },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) },
-                                    colors = MenuDefaults.itemColors(
-                                        textColor = MaterialTheme.colorScheme.error,
-                                        leadingIconColor = MaterialTheme.colorScheme.error,
-                                    ),
-                                )
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Editar") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.onEditCameraClick(camera.id)
+                                        },
+                                        leadingIcon = { Icon(Icons.Default.Edit, null) },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Excluir") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.onDeleteCameraClick(camera.id)
+                                        },
+                                        leadingIcon = { Icon(Icons.Default.Delete, null) },
+                                        colors = MenuDefaults.itemColors(
+                                            textColor = MaterialTheme.colorScheme.error,
+                                            leadingIconColor = MaterialTheme.colorScheme.error,
+                                        ),
+                                    )
+                                }
                             }
                         }
                     }
-                }
                 }
             }
         }
