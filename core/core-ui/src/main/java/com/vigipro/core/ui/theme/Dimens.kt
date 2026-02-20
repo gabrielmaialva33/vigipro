@@ -30,6 +30,17 @@ object Dimens {
     val PlayerControlIconSize = 24.dp
     val TimelineHeight = 48.dp
     val TimelineTrackHeight = 4.dp
+    val PlayerOverlayPadding = 16.dp
+
+    // PTZ controls
+    val PtzPadSize = 180.dp
+    val PtzDirectionButtonSize = 48.dp
+    val PtzCenterButtonSize = 36.dp
+    val PtzZoomButtonSize = 48.dp
+    val PtzPresetChipHeight = 32.dp
+
+    // Stream info
+    val StreamInfoChipHeight = 28.dp
 
     // FAB
     val FabSize = 56.dp

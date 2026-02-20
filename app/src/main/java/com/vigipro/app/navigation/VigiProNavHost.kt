@@ -74,7 +74,9 @@ fun VigiProNavHost() {
         }
 
         composable("settings") {
-            SettingsScreen()
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }
