@@ -32,6 +32,12 @@ private val LightColorScheme = lightColorScheme(
     onError = Color.White,
     errorContainer = Red90,
     onErrorContainer = Red10,
+    background = SurfaceLight,
+    onBackground = Slate10,
+    surface = SurfaceLight,
+    onSurface = Slate10,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = Slate40
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -51,6 +57,12 @@ private val DarkColorScheme = darkColorScheme(
     onError = Red20,
     errorContainer = Red30,
     onErrorContainer = Red90,
+    background = SurfaceDark,
+    onBackground = Slate90,
+    surface = SurfaceDark,
+    onSurface = Slate90,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = Slate80
 )
 
 @Composable
@@ -77,6 +89,8 @@ fun VigiProTheme(
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
             }
+            window.statusBarColor = Color.Transparent.value.toInt()
+            window.navigationBarColor = Color.Transparent.value.toInt()
         }
     }
 

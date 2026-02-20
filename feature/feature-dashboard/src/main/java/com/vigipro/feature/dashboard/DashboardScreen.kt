@@ -3,6 +3,7 @@ package com.vigipro.feature.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -26,6 +27,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -117,60 +121,56 @@ fun DashboardScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            VigiProTopBar(
-                title = state.sites.find { it.id == state.selectedSiteId }?.name ?: "VigiPro",
-                actions = {
-                    // Site selector (only show if 2+ sites)
-                    if (state.sites.size > 1) {
-                        Box {
-                            IconButton(onClick = { showSiteDropdown = true }) {
-                                Icon(Icons.Default.LocationOn, contentDescription = "Trocar local")
-                            }
-                            SiteDropdown(
-                                expanded = showSiteDropdown,
-                                sites = state.sites.map { site ->
-                                    SiteItem(
-                                        id = site.id,
-                                        name = site.name,
-                                        cameraCount = state.cameras.count { it.siteId == site.id },
-                                    )
-                                },
-                                selectedSiteId = state.selectedSiteId,
-                                onSiteSelected = { siteId ->
-                                    showSiteDropdown = false
-                                    viewModel.onSiteSelected(siteId)
-                                },
-                                onDismiss = { showSiteDropdown = false },
-                            )
-                        }
-                    }
-
-                    // Event timeline
-                    IconButton(onClick = viewModel::onEventTimelineClick) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Eventos")
-                    }
-
-                    // Access control
-                    IconButton(onClick = viewModel::onAccessControlClick) {
-                        Icon(Icons.Default.People, contentDescription = "Controle de acesso")
-                    }
-
-                    GridLayoutToggle(
-                        currentLayout = state.gridLayout,
-                        onLayoutChange = viewModel::onGridLayoutChange,
-                    )
-                    IconButton(onClick = viewModel::onSettingsClick) {
-                        Icon(Icons.Default.Settings, contentDescription = "Configuracoes")
+            androidx.compose.material3.TopAppBar(
+                title = { 
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "VigiPro",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+                            fontSize = 24.sp,
+                            letterSpacing = (-1).sp
+                        )
                     }
                 },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { /* Menu */ },
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Menu, "Menu", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = viewModel::onEventTimelineClick,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Notifications, "Notificações", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = viewModel::onAddCameraClick,
                 containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier.padding(16.dp).size(64.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar camera")
+                Icon(Icons.Default.Add, contentDescription = "Adicionar camera", modifier = Modifier.size(32.dp))
             }
         },
     ) { padding ->
@@ -184,9 +184,9 @@ fun DashboardScreen(
             state.cameras.isEmpty() -> {
                 EmptyState(
                     icon = Icons.Default.VideocamOff,
-                    title = "Nenhuma camera",
-                    subtitle = "Adicione sua primeira camera para comecar o monitoramento",
-                    actionLabel = "Adicionar Camera",
+                    title = "Nenhuma Câmera Detectada",
+                    subtitle = "Sua central de monitoramento está vazia. Adicione sua primeira câmera IP ou ONVIF para começar a vigiar seu espaço.",
+                    actionLabel = "Adicionar Câmera",
                     onAction = viewModel::onAddCameraClick,
                     modifier = Modifier.padding(padding),
                 )
@@ -255,7 +255,11 @@ fun DashboardScreen(
                         items(state.cameras, key = { it.id }) { camera ->
                             var showMenu by remember { mutableStateOf(false) }
 
-                            Box(modifier = Modifier.animateItem()) {
+                            Box(modifier = Modifier.animateItem(
+                                fadeInSpec = tween(500),
+                                fadeOutSpec = tween(300),
+                                placementSpec = tween(400, easing = FastOutSlowInEasing)
+                            )) {
                                 CameraCard(
                                     name = camera.name,
                                     status = camera.status.toConnectionStatus(),

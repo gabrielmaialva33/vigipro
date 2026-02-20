@@ -1,27 +1,28 @@
 package com.vigipro.core.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,14 +34,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.vigipro.core.ui.theme.CameraCardShape
-import com.vigipro.core.ui.theme.CameraPreviewShape
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.vigipro.core.ui.theme.Dimens
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,21 +51,20 @@ import com.vigipro.core.ui.theme.Dimens
 fun CameraCard(
     name: String,
     status: ConnectionStatus,
-    thumbnailUrl: String?,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onLongClick: (() -> Unit)? = null,
+    thumbnailUrl: String? = null,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     ptzCapable: Boolean = false,
     audioCapable: Boolean = false,
-    previewContent: (@Composable () -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-
+    
+    // Smooth scaling animation when card is pressed
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = tween(durationMillis = 150),
-        label = "cardScale",
+        label = "cardScale"
     )
 
     Card(
@@ -72,98 +74,122 @@ fun CameraCard(
                 scaleX = scale
                 scaleY = scale
             }
+            .clip(RoundedCornerShape(16.dp))
             .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null,
+                indication = androidx.compose.material3.ripple(color = MaterialTheme.colorScheme.primary),
                 onClick = onClick,
-                onLongClick = onLongClick,
+                onLongClick = onLongClick
             ),
-        shape = CameraCardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.CameraCardElevation),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isPressed) 0.dp else 4.dp,
+            pressedElevation = 0.dp
         ),
     ) {
         Column {
-            // Camera preview area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(Dimens.CameraPreviewAspectRatio)
-                    .clip(CameraPreviewShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                contentAlignment = Alignment.Center,
+                    .aspectRatio(16f / 9f)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
-                if (previewContent != null) {
-                    previewContent()
-                } else if (thumbnailUrl != null) {
+                if (thumbnailUrl != null) {
                     AsyncImage(
-                        model = thumbnailUrl,
-                        contentDescription = name,
-                        modifier = Modifier.fillMaxSize(),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(thumbnailUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Thumbnail for $name",
                         contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 } else {
                     Icon(
-                        imageVector = if (status == ConnectionStatus.ONLINE) {
-                            Icons.Default.Videocam
-                        } else {
-                            Icons.Default.VideocamOff
-                        },
+                        imageVector = Icons.Default.Videocam,
                         contentDescription = null,
-                        modifier = Modifier.size(Dimens.IconLg),
+                        modifier = Modifier
+                            .size(Dimens.IconXxl)
+                            .align(Alignment.Center),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     )
                 }
 
-                // Status overlay (top-left)
+                // Dark gradient overlay at the bottom of the image for better text readability
                 Box(
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(Dimens.SpacingSm),
-                ) {
-                    StatusBadge(status = status, showLabel = false)
-                }
-            }
-
-            // Camera info
-            Column(
-                modifier = Modifier.padding(
-                    horizontal = Dimens.SpacingSm,
-                    vertical = Dimens.SpacingXs,
-                ),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        if (ptzCapable) {
-                            Icon(
-                                imageVector = Icons.Default.OpenWith,
-                                contentDescription = "PTZ",
-                                modifier = Modifier.size(Dimens.IconSm),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        .fillMaxWidth()
+                        .height(32.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
                             )
-                        }
-                        if (audioCapable) {
+                        )
+                )
+
+                // Capabilities indicators on top right of the image
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(Dimens.SpacingSm),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs),
+                ) {
+                    if (audioCapable) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Black.copy(alpha = 0.6f)),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Mic,
                                 contentDescription = "Audio",
-                                modifier = Modifier.size(Dimens.IconSm),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.White,
+                            )
+                        }
+                    }
+                    if (ptzCapable) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Black.copy(alpha = 0.6f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.OpenWith,
+                                contentDescription = "PTZ",
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.White,
                             )
                         }
                     }
                 }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.SpacingMd),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                StatusBadge(status = status)
             }
         }
     }
