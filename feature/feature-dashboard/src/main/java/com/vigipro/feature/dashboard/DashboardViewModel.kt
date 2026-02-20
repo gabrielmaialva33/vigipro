@@ -15,11 +15,13 @@ data class DashboardState(
     val cameras: List<Camera> = emptyList(),
     val gridLayout: GridLayout = GridLayout.GRID_2X2,
     val isLoading: Boolean = true,
+    val cameraToDelete: Camera? = null,
 )
 
 sealed interface DashboardSideEffect {
     data class NavigateToPlayer(val cameraId: String) : DashboardSideEffect
     data object NavigateToAddCamera : DashboardSideEffect
+    data class NavigateToEditCamera(val cameraId: String) : DashboardSideEffect
     data object NavigateToSettings : DashboardSideEffect
 }
 
@@ -53,6 +55,25 @@ class DashboardViewModel @Inject constructor(
 
     fun onAddCameraClick() = intent {
         postSideEffect(DashboardSideEffect.NavigateToAddCamera)
+    }
+
+    fun onEditCameraClick(cameraId: String) = intent {
+        postSideEffect(DashboardSideEffect.NavigateToEditCamera(cameraId))
+    }
+
+    fun onDeleteCameraClick(cameraId: String) = intent {
+        val camera = state.cameras.find { it.id == cameraId }
+        reduce { state.copy(cameraToDelete = camera) }
+    }
+
+    fun onConfirmDelete() = intent {
+        val camera = state.cameraToDelete ?: return@intent
+        cameraRepository.deleteCamera(camera.id)
+        reduce { state.copy(cameraToDelete = null) }
+    }
+
+    fun onDismissDelete() = intent {
+        reduce { state.copy(cameraToDelete = null) }
     }
 
     fun onSettingsClick() = intent {

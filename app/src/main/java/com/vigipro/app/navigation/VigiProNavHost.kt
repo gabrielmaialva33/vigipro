@@ -38,6 +38,9 @@ fun VigiProNavHost() {
                 onNavigateToAddCamera = {
                     navController.navigate("add_camera")
                 },
+                onNavigateToEditCamera = { cameraId ->
+                    navController.navigate("edit_camera/$cameraId")
+                },
                 onNavigateToSettings = {
                     navController.navigate("settings")
                 },
@@ -56,7 +59,17 @@ fun VigiProNavHost() {
         composable("add_camera") {
             AddCameraScreen(
                 onBack = { navController.popBackStack() },
-                onCameraAdded = { navController.popBackStack() },
+                onCameraSaved = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = "edit_camera/{cameraId}",
+            arguments = listOf(navArgument("cameraId") { type = NavType.StringType }),
+        ) {
+            AddCameraScreen(
+                onBack = { navController.popBackStack() },
+                onCameraSaved = { navController.popBackStack() },
             )
         }
 

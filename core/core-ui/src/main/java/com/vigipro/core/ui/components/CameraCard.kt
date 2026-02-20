@@ -1,6 +1,8 @@
 package com.vigipro.core.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,7 @@ import com.vigipro.core.ui.theme.CameraCardShape
 import com.vigipro.core.ui.theme.CameraPreviewShape
 import com.vigipro.core.ui.theme.Dimens
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CameraCard(
     name: String,
@@ -39,13 +42,18 @@ fun CameraCard(
     thumbnailUrl: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
     ptzCapable: Boolean = false,
     audioCapable: Boolean = false,
     previewContent: (@Composable () -> Unit)? = null,
 ) {
     Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
         shape = CameraCardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = Dimens.CameraCardElevation),
         colors = CardDefaults.cardColors(
