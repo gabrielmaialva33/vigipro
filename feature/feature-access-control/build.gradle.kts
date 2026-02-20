@@ -12,4 +12,7 @@ dependencies {
 
     // QR Code generation
     implementation(libs.zxing.core)
+
+    // QR Code scanning (ML Kit)
+    implementation(libs.barcode.scanning)
 }

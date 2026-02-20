@@ -17,4 +17,11 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.orbit.test)
+    testImplementation(libs.turbine)
 }

@@ -4,12 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.rtsp.RtspConnectionTester
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraStatus
 import com.vigipro.feature.devices.onvif.OnvifDeviceInfo
 import com.vigipro.feature.devices.onvif.OnvifDiscoveryService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.firstOrNull
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.container
 import java.net.URI
@@ -92,6 +94,7 @@ sealed interface AddCameraSideEffect {
 @HiltViewModel
 class AddCameraViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
+    private val siteRepository: SiteRepository,
     private val connectionTester: RtspConnectionTester,
     private val onvifDiscovery: OnvifDiscoveryService,
     savedStateHandle: SavedStateHandle,
@@ -226,9 +229,11 @@ class AddCameraViewModel @Inject constructor(
             val testResult = connectionTester.testConnection(url)
             val initialStatus = if (testResult.success) CameraStatus.ONLINE else CameraStatus.OFFLINE
 
+            val activeSiteId = siteRepository.getUserSites().firstOrNull()?.firstOrNull()?.id ?: "local"
+
             val camera = Camera(
                 id = state.editCameraId ?: UUID.randomUUID().toString(),
-                siteId = "local",
+                siteId = activeSiteId,
                 name = state.name.trim(),
                 rtspUrl = url,
                 onvifAddress = if (state.connectionMethod == ConnectionMethod.ONVIF) {

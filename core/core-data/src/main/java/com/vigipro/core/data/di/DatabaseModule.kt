@@ -3,6 +3,7 @@ package com.vigipro.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.vigipro.core.data.db.CameraDao
+import com.vigipro.core.data.db.SiteDao
 import com.vigipro.core.data.db.VigiProDatabase
 import dagger.Module
 import dagger.Provides
@@ -22,11 +23,18 @@ object DatabaseModule {
             context,
             VigiProDatabase::class.java,
             "vigipro.db",
-        ).build()
+        )
+            .addMigrations(VigiProDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
     fun provideCameraDao(database: VigiProDatabase): CameraDao {
         return database.cameraDao()
+    }
+
+    @Provides
+    fun provideSiteDao(database: VigiProDatabase): SiteDao {
+        return database.siteDao()
     }
 }

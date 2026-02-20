@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.AlertDialog
@@ -39,6 +41,8 @@ import com.vigipro.core.ui.components.ConnectionStatus
 import com.vigipro.core.ui.components.EmptyState
 import com.vigipro.core.ui.components.GridLayoutToggle
 import com.vigipro.core.ui.components.LoadingIndicator
+import com.vigipro.core.ui.components.SiteDropdown
+import com.vigipro.core.ui.components.SiteItem
 import com.vigipro.core.ui.components.VigiProTopBar
 import com.vigipro.core.ui.theme.Dimens
 import org.orbitmvi.orbit.compose.collectAsState
@@ -51,10 +55,12 @@ fun DashboardScreen(
     onNavigateToAddCamera: () -> Unit,
     onNavigateToEditCamera: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToAccessControl: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.collectAsState()
+    var showSiteDropdown by remember { mutableStateOf(false) }
 
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
@@ -62,6 +68,7 @@ fun DashboardScreen(
             DashboardSideEffect.NavigateToAddCamera -> onNavigateToAddCamera()
             is DashboardSideEffect.NavigateToEditCamera -> onNavigateToEditCamera(sideEffect.cameraId)
             DashboardSideEffect.NavigateToSettings -> onNavigateToSettings()
+            DashboardSideEffect.NavigateToAccessControl -> onNavigateToAccessControl()
         }
     }
 
@@ -88,8 +95,38 @@ fun DashboardScreen(
         modifier = modifier,
         topBar = {
             VigiProTopBar(
-                title = "VigiPro",
+                title = state.sites.find { it.id == state.selectedSiteId }?.name ?: "VigiPro",
                 actions = {
+                    // Site selector (only show if 2+ sites)
+                    if (state.sites.size > 1) {
+                        Box {
+                            IconButton(onClick = { showSiteDropdown = true }) {
+                                Icon(Icons.Default.LocationOn, contentDescription = "Trocar local")
+                            }
+                            SiteDropdown(
+                                expanded = showSiteDropdown,
+                                sites = state.sites.map { site ->
+                                    SiteItem(
+                                        id = site.id,
+                                        name = site.name,
+                                        cameraCount = state.cameras.count { it.siteId == site.id },
+                                    )
+                                },
+                                selectedSiteId = state.selectedSiteId,
+                                onSiteSelected = { siteId ->
+                                    showSiteDropdown = false
+                                    viewModel.onSiteSelected(siteId)
+                                },
+                                onDismiss = { showSiteDropdown = false },
+                            )
+                        }
+                    }
+
+                    // Access control
+                    IconButton(onClick = viewModel::onAccessControlClick) {
+                        Icon(Icons.Default.People, contentDescription = "Controle de acesso")
+                    }
+
                     GridLayoutToggle(
                         currentLayout = state.gridLayout,
                         onLayoutChange = viewModel::onGridLayoutChange,

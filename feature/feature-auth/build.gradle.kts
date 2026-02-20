@@ -9,4 +9,11 @@ android {
 
 dependencies {
     implementation(project(":core:core-network"))
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.orbit.test)
+    testImplementation(libs.turbine)
 }

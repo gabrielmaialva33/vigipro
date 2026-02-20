@@ -12,9 +12,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Replace with actual Supabase project values
-        buildConfigField("String", "SUPABASE_URL", "\"https://your-project.supabase.co\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"your-anon-key\"")
+        buildConfigField("String", "SUPABASE_URL", "\"https://uvoanrknmoonudxyccwk.supabase.co\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2b2FucmtubW9vbnVkeHljY3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NTQxNDIsImV4cCI6MjA4NzEzMDE0Mn0.FvDQ-nrAqmQjJSWHaDK5PbzBtb888SJtuS1I5BebJlQ\"")
     }
 }
 
@@ -27,9 +26,9 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.json)
 
-    // Supabase
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.realtime)
-    implementation(libs.supabase.storage)
+    // Supabase (api — exposed to consumers like core-data)
+    api(libs.supabase.auth)
+    api(libs.supabase.postgrest)
+    api(libs.supabase.realtime)
+    api(libs.supabase.storage)
 }

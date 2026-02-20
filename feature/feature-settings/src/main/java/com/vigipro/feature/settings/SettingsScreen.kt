@@ -37,6 +37,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -47,6 +48,7 @@ fun SettingsScreen(
         when (sideEffect) {
             is SettingsSideEffect.ShowSnackbar -> snackbarHostState.showSnackbar(sideEffect.message)
             SettingsSideEffect.NavigateBack -> onBack()
+            SettingsSideEffect.NavigateToLogin -> onLogout()
         }
     }
 
@@ -95,6 +97,22 @@ fun SettingsScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState()),
             ) {
+                // Conta
+                SettingsSection(title = "CONTA") {
+                    SettingsInfoItem(
+                        title = "Email",
+                        value = state.userEmail ?: "Nao conectado",
+                    )
+                    SettingsActionItem(
+                        title = "Sair da conta",
+                        subtitle = "Encerrar sessao e voltar para tela de login",
+                        onClick = viewModel::onLogout,
+                        destructive = true,
+                    )
+                }
+
+                HorizontalDivider()
+
                 // Video
                 SettingsSection(title = "VIDEO") {
                     SettingsDropdownItem(

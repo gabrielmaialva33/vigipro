@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.monitor.CameraStatusMonitor
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.model.Camera
+import com.vigipro.core.model.Site
 import com.vigipro.core.ui.components.GridLayout
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.orbitmvi.orbit.ContainerHost
@@ -13,6 +15,8 @@ import javax.inject.Inject
 
 data class DashboardState(
     val cameras: List<Camera> = emptyList(),
+    val sites: List<Site> = emptyList(),
+    val selectedSiteId: String? = null,
     val gridLayout: GridLayout = GridLayout.GRID_2X2,
     val isLoading: Boolean = true,
     val cameraToDelete: Camera? = null,
@@ -23,15 +27,18 @@ sealed interface DashboardSideEffect {
     data object NavigateToAddCamera : DashboardSideEffect
     data class NavigateToEditCamera(val cameraId: String) : DashboardSideEffect
     data object NavigateToSettings : DashboardSideEffect
+    data object NavigateToAccessControl : DashboardSideEffect
 }
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
+    private val siteRepository: SiteRepository,
     private val statusMonitor: CameraStatusMonitor,
 ) : ViewModel(), ContainerHost<DashboardState, DashboardSideEffect> {
 
     override val container = viewModelScope.container<DashboardState, DashboardSideEffect>(DashboardState()) {
+        observeSites()
         observeCameras()
         statusMonitor.start(viewModelScope)
     }
@@ -41,10 +48,32 @@ class DashboardViewModel @Inject constructor(
         statusMonitor.stop()
     }
 
+    private fun observeSites() = intent {
+        siteRepository.getUserSites().collect { sites ->
+            val selectedId = state.selectedSiteId ?: sites.firstOrNull()?.id
+            reduce { state.copy(sites = sites, selectedSiteId = selectedId) }
+        }
+    }
+
     private fun observeCameras() = intent {
         cameraRepository.getAllCameras().collect { cameras ->
             reduce {
-                state.copy(cameras = cameras, isLoading = false)
+                val filtered = if (state.selectedSiteId != null) {
+                    cameras.filter { it.siteId == state.selectedSiteId }
+                } else {
+                    cameras
+                }
+                state.copy(cameras = filtered, isLoading = false)
+            }
+        }
+    }
+
+    fun onSiteSelected(siteId: String) = intent {
+        reduce { state.copy(selectedSiteId = siteId) }
+        // Re-filter cameras
+        cameraRepository.getAllCameras().collect { cameras ->
+            reduce {
+                state.copy(cameras = cameras.filter { it.siteId == siteId })
             }
         }
     }
@@ -78,6 +107,10 @@ class DashboardViewModel @Inject constructor(
 
     fun onSettingsClick() = intent {
         postSideEffect(DashboardSideEffect.NavigateToSettings)
+    }
+
+    fun onAccessControlClick() = intent {
+        postSideEffect(DashboardSideEffect.NavigateToAccessControl)
     }
 
     fun onGridLayoutChange(layout: GridLayout) = intent {

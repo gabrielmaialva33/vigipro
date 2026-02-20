@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
+import com.vigipro.feature.accesscontrol.AccessControlScreen
 import com.vigipro.feature.auth.LoginScreen
 import com.vigipro.feature.dashboard.DashboardScreen
 import com.vigipro.feature.devices.addcamera.AddCameraScreen
@@ -18,7 +20,7 @@ fun VigiProNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = "dashboard",
+        startDestination = "login",
     ) {
         composable("login") {
             LoginScreen(
@@ -43,6 +45,9 @@ fun VigiProNavHost() {
                 },
                 onNavigateToSettings = {
                     navController.navigate("settings")
+                },
+                onNavigateToAccessControl = {
+                    navController.navigate("access_control")
                 },
             )
         }
@@ -75,6 +80,30 @@ fun VigiProNavHost() {
 
         composable("settings") {
             SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable("access_control") {
+            AccessControlScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = "access_control/redeem/{code}",
+            arguments = listOf(navArgument("code") { type = NavType.StringType }),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "https://vigipro.app/invite/{code}" },
+            ),
+        ) {
+            // Redeem invite - for now redirect to access control
+            AccessControlScreen(
                 onBack = { navController.popBackStack() },
             )
         }

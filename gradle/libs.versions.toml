@@ -42,6 +42,10 @@ barcode-scanning = "17.3.0"
 junit = "4.13.2"
 junit-android = "1.2.1"
 espresso = "3.6.1"
+mockk = "1.13.16"
+turbine = "1.2.0"
+coroutines-test = "1.10.1"
+orbit-test = "9.0.0"
 
 [libraries]
 # AndroidX Core
@@ -121,6 +125,10 @@ junit = { module = "junit:junit", version.ref = "junit" }
 junit-android = { module = "androidx.test.ext:junit", version.ref = "junit-android" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines-test" }
+orbit-test = { module = "org.orbit-mvi:orbit-test", version.ref = "orbit-test" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
