@@ -26,4 +26,10 @@ interface SiteDao {
 
     @Query("DELETE FROM sites")
     suspend fun deleteAll()
+
+    @Query("UPDATE sites SET latitude = :lat, longitude = :lng, geofence_radius = :radius, geofence_enabled = :enabled WHERE id = :siteId")
+    suspend fun updateGeofence(siteId: String, lat: Double?, lng: Double?, radius: Float, enabled: Boolean)
+
+    @Query("SELECT * FROM sites WHERE geofence_enabled = 1 AND latitude IS NOT NULL AND longitude IS NOT NULL")
+    fun getGeofencedSites(): Flow<List<SiteEntity>>
 }

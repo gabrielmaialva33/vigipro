@@ -9,7 +9,9 @@ import com.vigipro.core.data.repository.InvitationRepository
 import com.vigipro.core.data.repository.LocalCameraRepository
 import com.vigipro.core.data.repository.LocalEventRepository
 import com.vigipro.core.data.repository.LocalRecordingRepository
+import com.vigipro.core.data.repository.LocalPrivacyZoneRepository
 import com.vigipro.core.data.repository.LocalWebhookRepository
+import com.vigipro.core.data.repository.PrivacyZoneRepository
 import com.vigipro.core.data.repository.RecordingRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.repository.SupabaseAuthRepository
@@ -48,4 +50,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindWebhookRepository(impl: LocalWebhookRepository): WebhookRepository
+
+    @Binds
+    abstract fun bindPrivacyZoneRepository(impl: LocalPrivacyZoneRepository): PrivacyZoneRepository
 }

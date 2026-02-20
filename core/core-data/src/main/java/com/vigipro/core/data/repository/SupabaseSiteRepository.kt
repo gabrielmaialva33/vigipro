@@ -101,6 +101,10 @@ class SupabaseSiteRepository @Inject constructor(
         name = name,
         address = address,
         ownerId = ownerId,
+        latitude = latitude,
+        longitude = longitude,
+        geofenceRadius = geofenceRadius,
+        geofenceEnabled = geofenceEnabled,
     )
 
     private fun Site.toEntity() = SiteEntity(
@@ -108,5 +112,9 @@ class SupabaseSiteRepository @Inject constructor(
         name = name,
         address = address,
         ownerId = ownerId,
+        latitude = latitude,
+        longitude = longitude,
+        geofenceRadius = geofenceRadius,
+        geofenceEnabled = geofenceEnabled,
     )
 }

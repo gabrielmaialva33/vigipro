@@ -20,4 +20,12 @@ data class UserPreferences(
     val notifyPersonDetected: Boolean = false,
     val detectionIntervalMs: Long = 750L,
     val talkbackEnabled: Boolean = true,
+    val biometricLockEnabled: Boolean = false,
+    val geofencingEnabled: Boolean = false,
+    val defaultGeofenceRadius: Float = 200f,
+    val privacyMaskingEnabled: Boolean = true,
+    val alertDigestEnabled: Boolean = false,
+    val alertDigestIntervalMinutes: Int = 15,
+    val alertDigestQuietHoursStart: Int = 22, // 22:00
+    val alertDigestQuietHoursEnd: Int = 7,    // 07:00
 )

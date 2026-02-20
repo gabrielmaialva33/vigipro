@@ -25,6 +25,16 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
+    // Hilt WorkManager
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
+
+    // Biometric
+    implementation(libs.androidx.biometric)
+
     // Media3 / ExoPlayer (for StreamRecorder)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.exoplayer.rtsp)
@@ -32,6 +42,9 @@ dependencies {
 
     // ML Kit Object Detection
     implementation(libs.mlkit.od.custom)
+
+    // Location (Geofencing)
+    implementation(libs.play.services.location)
 
     // Testing
     testImplementation(libs.junit)

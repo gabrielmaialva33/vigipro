@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -76,6 +78,10 @@ fun PlayerControlsOverlay(
     isRecording: Boolean,
     recordingDurationMs: Long,
     onRecordClick: () -> Unit,
+    isPatrolling: Boolean,
+    onPatrolClick: () -> Unit,
+    onPrivacyZoneToggle: () -> Unit,
+    hasPrivacyZones: Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -162,6 +168,16 @@ fun PlayerControlsOverlay(
                                 )
                             },
                         )
+                        OverlayIconButton(
+                            onClick = onPatrolClick,
+                            icon = {
+                                Icon(
+                                    Icons.Default.Route,
+                                    if (isPatrolling) "Patrulha ativa" else "Patrulha",
+                                    tint = if (isPatrolling) Color(0xFF4CAF50) else Color.White,
+                                )
+                            },
+                        )
                     }
                     if (detectionEnabled) {
                         OverlayIconButton(
@@ -187,6 +203,16 @@ fun PlayerControlsOverlay(
                             },
                         )
                     }
+                    OverlayIconButton(
+                        onClick = onPrivacyZoneToggle,
+                        icon = {
+                            Icon(
+                                Icons.Default.Shield,
+                                "Mascaras de privacidade",
+                                tint = if (hasPrivacyZones) Color(0xFF7C4DFF) else Color.White,
+                            )
+                        },
+                    )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OverlayIconButton(

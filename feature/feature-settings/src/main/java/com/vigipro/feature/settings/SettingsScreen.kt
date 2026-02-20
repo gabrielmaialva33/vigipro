@@ -134,6 +134,12 @@ fun SettingsScreen(
                         checked = state.preferences.audioEnabledByDefault,
                         onCheckedChange = viewModel::onAudioEnabledChange,
                     )
+                    SettingsToggleItem(
+                        title = "Mascaras de privacidade",
+                        subtitle = "Exibir zonas de privacidade sobre o video",
+                        checked = state.preferences.privacyMaskingEnabled,
+                        onCheckedChange = viewModel::onPrivacyMaskingEnabledChange,
+                    )
                 }
 
                 HorizontalDivider()
@@ -206,6 +212,80 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                // Resumo de Alertas
+                SettingsSection(title = "RESUMO DE ALERTAS") {
+                    SettingsToggleItem(
+                        title = "Resumo periodico",
+                        subtitle = "Agrupar notificacoes em resumos periodicos",
+                        checked = state.preferences.alertDigestEnabled,
+                        onCheckedChange = viewModel::onAlertDigestEnabledChange,
+                    )
+                    if (state.preferences.alertDigestEnabled) {
+                        SettingsDropdownItem(
+                            title = "Intervalo do resumo",
+                            currentValue = state.preferences.alertDigestIntervalMinutes,
+                            options = listOf(5, 15, 30, 60),
+                            onValueChange = viewModel::onAlertDigestIntervalChange,
+                            displayMapper = { minutes ->
+                                when (minutes) {
+                                    5 -> "5 minutos"
+                                    15 -> "15 minutos"
+                                    30 -> "30 minutos"
+                                    60 -> "1 hora"
+                                    else -> "$minutes min"
+                                }
+                            },
+                        )
+                        SettingsDropdownItem(
+                            title = "Horario silencioso - inicio",
+                            subtitle = "Nao enviar resumos a partir deste horario",
+                            currentValue = state.preferences.alertDigestQuietHoursStart,
+                            options = listOf(20, 21, 22, 23),
+                            onValueChange = viewModel::onAlertDigestQuietStartChange,
+                            displayMapper = { hour -> "${hour}:00" },
+                        )
+                        SettingsDropdownItem(
+                            title = "Horario silencioso - fim",
+                            currentValue = state.preferences.alertDigestQuietHoursEnd,
+                            options = listOf(5, 6, 7, 8),
+                            onValueChange = viewModel::onAlertDigestQuietEndChange,
+                            displayMapper = { hour -> "${hour}:00" },
+                        )
+                    }
+                }
+
+                HorizontalDivider()
+
+                // Geofencing
+                SettingsSection(title = "GEOFENCING") {
+                    SettingsToggleItem(
+                        title = "Auto-armar por localizacao",
+                        subtitle = "Ativar/desativar deteccao automaticamente ao sair/chegar em um site",
+                        checked = state.preferences.geofencingEnabled,
+                        onCheckedChange = viewModel::onGeofencingEnabledChange,
+                    )
+                    if (state.preferences.geofencingEnabled) {
+                        SettingsDropdownItem(
+                            title = "Raio do geofence",
+                            subtitle = "Distancia do site para acionar a deteccao",
+                            currentValue = state.preferences.defaultGeofenceRadius,
+                            options = listOf(100f, 200f, 500f, 1000f),
+                            onValueChange = viewModel::onGeofenceRadiusChange,
+                            displayMapper = { radius ->
+                                when (radius) {
+                                    100f -> "100 metros"
+                                    200f -> "200 metros"
+                                    500f -> "500 metros"
+                                    1000f -> "1 km"
+                                    else -> "${radius.toInt()}m"
+                                }
+                            },
+                        )
+                    }
+                }
+
+                HorizontalDivider()
+
                 // Deteccao Inteligente
                 SettingsSection(title = "DETECCAO INTELIGENTE") {
                     SettingsToggleItem(
@@ -274,6 +354,18 @@ fun SettingsScreen(
                         subtitle = "Habilitar botao de audio bidirecional no player",
                         checked = state.preferences.talkbackEnabled,
                         onCheckedChange = viewModel::onTalkbackEnabledChange,
+                    )
+                }
+
+                HorizontalDivider()
+
+                // Seguranca
+                SettingsSection(title = "SEGURANCA") {
+                    SettingsToggleItem(
+                        title = "Bloqueio biometrico",
+                        subtitle = "Exigir autenticacao ao abrir o app",
+                        checked = state.preferences.biometricLockEnabled,
+                        onCheckedChange = viewModel::onBiometricLockEnabledChange,
                     )
                 }
 

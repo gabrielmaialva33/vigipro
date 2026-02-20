@@ -14,13 +14,17 @@ import com.vigipro.core.data.preferences.UserPreferencesRepository
 import com.vigipro.core.data.recording.StreamRecorder
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.EventRepository
+import com.vigipro.core.data.repository.PrivacyZoneRepository
 import com.vigipro.core.data.repository.WebhookRepository
 import com.vigipro.core.data.webhook.WebhookExecutor
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraEventType
+import com.vigipro.core.model.PatrolRoute
+import com.vigipro.core.model.PrivacyZone
 import com.vigipro.core.model.WebhookAction
 import com.vigipro.core.model.DetectedObject
 import com.vigipro.core.model.DetectionCategory
+import com.vigipro.feature.player.patrol.PatrolManager
 import com.vigipro.feature.player.ptz.OnvifPtzClient
 import com.vigipro.feature.player.ptz.PtzPreset
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,6 +67,11 @@ data class PlayerState(
     val showAddWebhookDialog: Boolean = false,
     val isSubStream: Boolean = false,
     val retriedWithSubStream: Boolean = false,
+    val patrolState: PatrolManager.PatrolState = PatrolManager.PatrolState(),
+    val showPatrolSheet: Boolean = false,
+    val privacyZones: List<PrivacyZone> = emptyList(),
+    val isEditingPrivacyZones: Boolean = false,
+    val privacyMaskingEnabled: Boolean = true,
 )
 
 sealed interface PlayerSideEffect {
@@ -90,6 +99,8 @@ class PlayerViewModel @Inject constructor(
     private val streamRecorder: StreamRecorder,
     private val webhookRepository: WebhookRepository,
     private val webhookExecutor: WebhookExecutor,
+    private val patrolManager: PatrolManager,
+    private val privacyZoneRepository: PrivacyZoneRepository,
 ) : ViewModel(), ContainerHost<PlayerState, PlayerSideEffect> {
 
     private val cameraId: String = checkNotNull(savedStateHandle["cameraId"])
@@ -106,11 +117,15 @@ class PlayerViewModel @Inject constructor(
         loadDetectionPreference()
         loadTalkbackPreference()
         loadWebhooks()
+        observePatrolState()
+        loadPrivacyZones()
+        loadPrivacyMaskingPreference()
     }
 
     override fun onCleared() {
         viewModelScope.launch { streamRecorder.stopRecording() }
         super.onCleared()
+        patrolManager.detach()
         ptzClient.disconnect()
         stopDetection()
         detectionEngine.release()
@@ -159,6 +174,7 @@ class PlayerViewModel @Inject constructor(
                 intent {
                     reduce { state.copy(isPtzConnected = connected) }
                     if (connected) {
+                        patrolManager.attach(ptzClient)
                         val presetsResult = ptzClient.getPresets()
                         presetsResult.onSuccess { presets ->
                             reduce { state.copy(ptzPresets = presets) }
@@ -490,6 +506,63 @@ class PlayerViewModel @Inject constructor(
 
     fun onDeleteWebhook(webhookId: String) = intent {
         webhookRepository.deleteWebhook(webhookId)
+    }
+
+    // Patrol
+    private fun observePatrolState() = intent {
+        patrolManager.state.collect { patrol ->
+            reduce { state.copy(patrolState = patrol) }
+        }
+    }
+
+    fun onShowPatrolSheet() = intent {
+        reduce { state.copy(showPatrolSheet = true) }
+        controlsHideJob?.cancel()
+    }
+
+    fun onDismissPatrolSheet() = intent {
+        reduce { state.copy(showPatrolSheet = false) }
+    }
+
+    fun onStartPatrol(route: PatrolRoute) {
+        patrolManager.startPatrol(route, viewModelScope)
+    }
+
+    fun onStopPatrol() {
+        patrolManager.stopPatrol()
+    }
+
+    // Privacy Zones
+    private fun loadPrivacyZones() = intent {
+        privacyZoneRepository.getZonesForCamera(cameraId).collect { zones ->
+            reduce { state.copy(privacyZones = zones) }
+        }
+    }
+
+    private fun loadPrivacyMaskingPreference() = intent {
+        preferencesRepository.userPreferences.collect { prefs ->
+            reduce { state.copy(privacyMaskingEnabled = prefs.privacyMaskingEnabled) }
+        }
+    }
+
+    fun onTogglePrivacyZoneEditor() = intent {
+        val newEditing = !state.isEditingPrivacyZones
+        reduce { state.copy(isEditingPrivacyZones = newEditing, showControls = false) }
+        controlsHideJob?.cancel()
+    }
+
+    fun onAddPrivacyZone(left: Float, top: Float, right: Float, bottom: Float) = intent {
+        privacyZoneRepository.addZone(
+            cameraId = cameraId,
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom,
+        )
+    }
+
+    fun onDeletePrivacyZone(zone: PrivacyZone) = intent {
+        privacyZoneRepository.deleteZone(zone)
     }
 
     // Stream quality fallback

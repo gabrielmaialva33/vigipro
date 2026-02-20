@@ -31,6 +31,7 @@ sealed interface DashboardSideEffect {
     data object NavigateToEventTimeline : DashboardSideEffect
     data object NavigateToMultiview : DashboardSideEffect
     data object NavigateToRecordings : DashboardSideEffect
+    data object NavigateToAlertDigest : DashboardSideEffect
 }
 
 @HiltViewModel
@@ -130,5 +131,9 @@ class DashboardViewModel @Inject constructor(
 
     fun onRecordingsClick() = intent {
         postSideEffect(DashboardSideEffect.NavigateToRecordings)
+    }
+
+    fun onAlertDigestClick() = intent {
+        postSideEffect(DashboardSideEffect.NavigateToAlertDigest)
     }
 }

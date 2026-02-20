@@ -10,4 +10,8 @@ data class Site(
     val address: String? = null,
     @SerialName("owner_id") val ownerId: String,
     @SerialName("created_at") val createdAt: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    @SerialName("geofence_radius") val geofenceRadius: Float = 200f,
+    @SerialName("geofence_enabled") val geofenceEnabled: Boolean = false,
 )

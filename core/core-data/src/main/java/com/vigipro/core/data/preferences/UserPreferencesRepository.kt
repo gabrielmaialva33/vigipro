@@ -35,6 +35,14 @@ interface UserPreferencesRepository {
     suspend fun updateNotifyPersonDetected(enabled: Boolean)
     suspend fun updateDetectionIntervalMs(intervalMs: Long)
     suspend fun updateTalkbackEnabled(enabled: Boolean)
+    suspend fun updateBiometricLockEnabled(enabled: Boolean)
+    suspend fun updateGeofencingEnabled(enabled: Boolean)
+    suspend fun updateDefaultGeofenceRadius(radius: Float)
+    suspend fun updatePrivacyMaskingEnabled(enabled: Boolean)
+    suspend fun updateAlertDigestEnabled(enabled: Boolean)
+    suspend fun updateAlertDigestInterval(minutes: Int)
+    suspend fun updateAlertDigestQuietHoursStart(hour: Int)
+    suspend fun updateAlertDigestQuietHoursEnd(hour: Int)
     suspend fun clearCache()
 }
 
@@ -60,6 +68,14 @@ class LocalUserPreferencesRepository @Inject constructor(
         val NOTIFY_PERSON_DETECTED = booleanPreferencesKey("notify_person_detected")
         val DETECTION_INTERVAL = longPreferencesKey("detection_interval_ms")
         val TALKBACK_ENABLED = booleanPreferencesKey("talkback_enabled")
+        val BIOMETRIC_LOCK_ENABLED = booleanPreferencesKey("biometric_lock_enabled")
+        val GEOFENCING_ENABLED = booleanPreferencesKey("geofencing_enabled")
+        val DEFAULT_GEOFENCE_RADIUS = floatPreferencesKey("default_geofence_radius")
+        val PRIVACY_MASKING_ENABLED = booleanPreferencesKey("privacy_masking_enabled")
+        val ALERT_DIGEST_ENABLED = booleanPreferencesKey("alert_digest_enabled")
+        val ALERT_DIGEST_INTERVAL = intPreferencesKey("alert_digest_interval_minutes")
+        val ALERT_DIGEST_QUIET_START = intPreferencesKey("alert_digest_quiet_hours_start")
+        val ALERT_DIGEST_QUIET_END = intPreferencesKey("alert_digest_quiet_hours_end")
     }
 
     override val userPreferences: Flow<UserPreferences> = dataStore.data
@@ -93,6 +109,14 @@ class LocalUserPreferencesRepository @Inject constructor(
                 notifyPersonDetected = prefs[Keys.NOTIFY_PERSON_DETECTED] ?: false,
                 detectionIntervalMs = prefs[Keys.DETECTION_INTERVAL] ?: 750L,
                 talkbackEnabled = prefs[Keys.TALKBACK_ENABLED] ?: true,
+                biometricLockEnabled = prefs[Keys.BIOMETRIC_LOCK_ENABLED] ?: false,
+                geofencingEnabled = prefs[Keys.GEOFENCING_ENABLED] ?: false,
+                defaultGeofenceRadius = prefs[Keys.DEFAULT_GEOFENCE_RADIUS] ?: 200f,
+                privacyMaskingEnabled = prefs[Keys.PRIVACY_MASKING_ENABLED] ?: true,
+                alertDigestEnabled = prefs[Keys.ALERT_DIGEST_ENABLED] ?: false,
+                alertDigestIntervalMinutes = prefs[Keys.ALERT_DIGEST_INTERVAL] ?: 15,
+                alertDigestQuietHoursStart = prefs[Keys.ALERT_DIGEST_QUIET_START] ?: 22,
+                alertDigestQuietHoursEnd = prefs[Keys.ALERT_DIGEST_QUIET_END] ?: 7,
             )
         }
 
@@ -168,6 +192,38 @@ class LocalUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateTalkbackEnabled(enabled: Boolean) {
         safeEdit { it[Keys.TALKBACK_ENABLED] = enabled }
+    }
+
+    override suspend fun updateBiometricLockEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.BIOMETRIC_LOCK_ENABLED] = enabled }
+    }
+
+    override suspend fun updateGeofencingEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.GEOFENCING_ENABLED] = enabled }
+    }
+
+    override suspend fun updateDefaultGeofenceRadius(radius: Float) {
+        safeEdit { it[Keys.DEFAULT_GEOFENCE_RADIUS] = radius.coerceIn(50f, 5000f) }
+    }
+
+    override suspend fun updatePrivacyMaskingEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.PRIVACY_MASKING_ENABLED] = enabled }
+    }
+
+    override suspend fun updateAlertDigestEnabled(enabled: Boolean) {
+        safeEdit { it[Keys.ALERT_DIGEST_ENABLED] = enabled }
+    }
+
+    override suspend fun updateAlertDigestInterval(minutes: Int) {
+        safeEdit { it[Keys.ALERT_DIGEST_INTERVAL] = minutes.coerceIn(5, 60) }
+    }
+
+    override suspend fun updateAlertDigestQuietHoursStart(hour: Int) {
+        safeEdit { it[Keys.ALERT_DIGEST_QUIET_START] = hour.coerceIn(0, 23) }
+    }
+
+    override suspend fun updateAlertDigestQuietHoursEnd(hour: Int) {
+        safeEdit { it[Keys.ALERT_DIGEST_QUIET_END] = hour.coerceIn(0, 23) }
     }
 
     override suspend fun clearCache() {

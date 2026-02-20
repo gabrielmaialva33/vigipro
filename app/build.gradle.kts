@@ -52,12 +52,16 @@ dependencies {
     // Compose icons
     implementation(libs.compose.material.icons.extended)
 
+    // Biometric
+    implementation(libs.androidx.biometric)
+
     // Glance (Widgets)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 
     // WorkManager
     implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
 
     // Testing
     testImplementation(libs.junit)

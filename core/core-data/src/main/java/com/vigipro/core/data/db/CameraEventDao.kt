@@ -17,6 +17,9 @@ interface CameraEventDao {
     @Query("SELECT * FROM camera_events ORDER BY timestamp DESC LIMIT :limit")
     fun getRecentEvents(limit: Int): Flow<List<CameraEventEntity>>
 
+    @Query("SELECT * FROM camera_events WHERE timestamp >= :since ORDER BY timestamp DESC")
+    suspend fun getEventsSince(since: Long): List<CameraEventEntity>
+
     @Insert
     suspend fun insert(event: CameraEventEntity)
 

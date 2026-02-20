@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.AlertDialog
@@ -86,6 +87,7 @@ fun DashboardScreen(
     onNavigateToEventTimeline: () -> Unit = {},
     onNavigateToMultiview: () -> Unit = {},
     onNavigateToRecordings: () -> Unit = {},
+    onNavigateToAlertDigest: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -102,6 +104,7 @@ fun DashboardScreen(
             DashboardSideEffect.NavigateToEventTimeline -> onNavigateToEventTimeline()
             DashboardSideEffect.NavigateToMultiview -> onNavigateToMultiview()
             DashboardSideEffect.NavigateToRecordings -> onNavigateToRecordings()
+            DashboardSideEffect.NavigateToAlertDigest -> onNavigateToAlertDigest()
         }
     }
 
@@ -172,6 +175,16 @@ fun DashboardScreen(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
+                        onClick = viewModel::onAlertDigestClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(Icons.Default.Summarize, "Resumo de Alertas", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
                         onClick = viewModel::onEventTimelineClick,
                         modifier = Modifier
                             .padding(end = 8.dp)
@@ -179,7 +192,7 @@ fun DashboardScreen(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     ) {
-                        Icon(androidx.compose.material.icons.Icons.Default.Notifications, "Notificações", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(androidx.compose.material.icons.Icons.Default.Notifications, "Notificacoes", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(

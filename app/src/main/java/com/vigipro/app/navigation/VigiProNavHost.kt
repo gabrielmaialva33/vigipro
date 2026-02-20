@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.vigipro.feature.accesscontrol.AccessControlScreen
 import com.vigipro.feature.auth.LoginScreen
+import com.vigipro.feature.dashboard.AlertDigestScreen
 import com.vigipro.feature.dashboard.DashboardScreen
 import com.vigipro.feature.dashboard.EventTimelineScreen
 import com.vigipro.feature.devices.addcamera.AddCameraScreen
@@ -103,6 +104,9 @@ fun VigiProNavHost() {
                 onNavigateToRecordings = {
                     navController.navigate("recordings")
                 },
+                onNavigateToAlertDigest = {
+                    navController.navigate("alert_digest")
+                },
             )
         }
 
@@ -168,6 +172,12 @@ fun VigiProNavHost() {
 
         composable("event_timeline") {
             EventTimelineScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("alert_digest") {
+            AlertDigestScreen(
                 onBack = { navController.popBackStack() },
             )
         }

@@ -12,8 +12,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         CameraEventEntity::class,
         RecordingEntity::class,
         WebhookEntity::class,
+        PrivacyZoneEntity::class,
     ],
-    version = 4,
+    version = 6,
     exportSchema = true,
 )
 abstract class VigiProDatabase : RoomDatabase() {
@@ -22,6 +23,7 @@ abstract class VigiProDatabase : RoomDatabase() {
     abstract fun cameraEventDao(): CameraEventDao
     abstract fun recordingDao(): RecordingDao
     abstract fun webhookDao(): WebhookDao
+    abstract fun privacyZoneDao(): PrivacyZoneDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -97,6 +99,34 @@ abstract class VigiProDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_webhooks_camera_id ON webhooks(camera_id)")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sites ADD COLUMN latitude REAL")
+                db.execSQL("ALTER TABLE sites ADD COLUMN longitude REAL")
+                db.execSQL("ALTER TABLE sites ADD COLUMN geofence_radius REAL NOT NULL DEFAULT 200.0")
+                db.execSQL("ALTER TABLE sites ADD COLUMN geofence_enabled INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS privacy_zones (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        camera_id TEXT NOT NULL,
+                        label TEXT NOT NULL DEFAULT '',
+                        left REAL NOT NULL,
+                        top REAL NOT NULL,
+                        right REAL NOT NULL,
+                        bottom REAL NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_privacy_zones_camera_id ON privacy_zones(camera_id)")
             }
         }
     }

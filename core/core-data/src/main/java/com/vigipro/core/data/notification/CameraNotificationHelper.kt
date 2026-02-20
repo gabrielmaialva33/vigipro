@@ -37,6 +37,24 @@ class CameraNotificationHelper @Inject constructor(
             description = "Notificacoes quando objetos sao detectados pela IA"
         }
         notificationManager.createNotificationChannel(detectionChannel)
+
+        val statusChannel = NotificationChannel(
+            CHANNEL_STATUS,
+            "Status do Sistema",
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply {
+            description = "Notificacoes de status como geofencing e automacoes"
+        }
+        notificationManager.createNotificationChannel(statusChannel)
+
+        val digestChannel = NotificationChannel(
+            CHANNEL_ALERT_DIGEST,
+            "Resumo de Alertas",
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = "Resumos periodicos de atividade das cameras"
+        }
+        notificationManager.createNotificationChannel(digestChannel)
     }
 
     fun notifyCameraOffline(cameraId: String, cameraName: String) {
@@ -77,8 +95,38 @@ class CameraNotificationHelper @Inject constructor(
         notificationManager.notify("detection_${cameraId}".hashCode(), notification)
     }
 
+    fun showDigestNotification(title: String, summary: String, details: String) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ALERT_DIGEST)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(summary)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("$summary\n\n$details"),
+            )
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(true)
+            .build()
+        notificationManager.notify(NOTIFICATION_ID_DIGEST, notification)
+    }
+
+    fun showStatusNotification(title: String, message: String) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_STATUS)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+        notificationManager.notify(NOTIFICATION_ID_STATUS, notification)
+    }
+
     companion object {
         const val CHANNEL_CAMERA_ALERTS = "camera_alerts"
         const val CHANNEL_DETECTION_ALERTS = "detection_alerts"
+        const val CHANNEL_STATUS = "status"
+        const val CHANNEL_ALERT_DIGEST = "alert_digest"
+        private const val NOTIFICATION_ID_STATUS = 9001
+        private const val NOTIFICATION_ID_DIGEST = 9002
     }
 }

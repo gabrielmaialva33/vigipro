@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.vigipro.core.data.db.CameraDao
 import com.vigipro.core.data.db.CameraEventDao
+import com.vigipro.core.data.db.PrivacyZoneDao
 import com.vigipro.core.data.db.RecordingDao
 import com.vigipro.core.data.db.SiteDao
 import com.vigipro.core.data.db.VigiProDatabase
@@ -31,6 +32,8 @@ object DatabaseModule {
                 VigiProDatabase.MIGRATION_1_2,
                 VigiProDatabase.MIGRATION_2_3,
                 VigiProDatabase.MIGRATION_3_4,
+                VigiProDatabase.MIGRATION_4_5,
+                VigiProDatabase.MIGRATION_5_6,
             )
             .build()
     }
@@ -58,5 +61,10 @@ object DatabaseModule {
     @Provides
     fun provideWebhookDao(database: VigiProDatabase): WebhookDao {
         return database.webhookDao()
+    }
+
+    @Provides
+    fun providePrivacyZoneDao(database: VigiProDatabase): PrivacyZoneDao {
+        return database.privacyZoneDao()
     }
 }

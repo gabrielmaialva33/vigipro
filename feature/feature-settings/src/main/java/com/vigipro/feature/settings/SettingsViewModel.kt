@@ -2,6 +2,7 @@ package com.vigipro.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vigipro.core.data.digest.AlertDigestScheduler
 import com.vigipro.core.data.preferences.ThemeMode
 import com.vigipro.core.data.preferences.UserPreferences
 import com.vigipro.core.data.preferences.UserPreferencesRepository
@@ -29,6 +30,7 @@ sealed interface SettingsSideEffect {
 class SettingsViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val authRepository: AuthRepository,
+    private val alertDigestScheduler: AlertDigestScheduler,
 ) : ViewModel(), ContainerHost<SettingsState, SettingsSideEffect> {
 
     override val container = viewModelScope.container<SettingsState, SettingsSideEffect>(SettingsState()) {
@@ -108,6 +110,46 @@ class SettingsViewModel @Inject constructor(
 
     fun onTalkbackEnabledChange(enabled: Boolean) = intent {
         preferencesRepository.updateTalkbackEnabled(enabled)
+    }
+
+    fun onBiometricLockEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateBiometricLockEnabled(enabled)
+    }
+
+    fun onPrivacyMaskingEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updatePrivacyMaskingEnabled(enabled)
+    }
+
+    fun onGeofencingEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateGeofencingEnabled(enabled)
+    }
+
+    fun onGeofenceRadiusChange(radius: Float) = intent {
+        preferencesRepository.updateDefaultGeofenceRadius(radius)
+    }
+
+    fun onAlertDigestEnabledChange(enabled: Boolean) = intent {
+        preferencesRepository.updateAlertDigestEnabled(enabled)
+        if (enabled) {
+            alertDigestScheduler.scheduleDigest(state.preferences.alertDigestIntervalMinutes)
+        } else {
+            alertDigestScheduler.cancelDigest()
+        }
+    }
+
+    fun onAlertDigestIntervalChange(minutes: Int) = intent {
+        preferencesRepository.updateAlertDigestInterval(minutes)
+        if (state.preferences.alertDigestEnabled) {
+            alertDigestScheduler.scheduleDigest(minutes)
+        }
+    }
+
+    fun onAlertDigestQuietStartChange(hour: Int) = intent {
+        preferencesRepository.updateAlertDigestQuietHoursStart(hour)
+    }
+
+    fun onAlertDigestQuietEndChange(hour: Int) = intent {
+        preferencesRepository.updateAlertDigestQuietHoursEnd(hour)
     }
 
     fun onClearCacheRequest() = intent {

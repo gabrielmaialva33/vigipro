@@ -58,6 +58,10 @@ import com.vigipro.core.ui.components.ErrorState
 import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.components.VigiProTopBar
 import com.vigipro.core.ui.theme.Dimens
+import com.vigipro.feature.player.patrol.PatrolButton
+import com.vigipro.feature.player.patrol.PatrolConfigSheet
+import com.vigipro.feature.player.privacy.PrivacyMaskOverlay
+import com.vigipro.feature.player.privacy.PrivacyZoneEditor
 import com.vigipro.feature.player.snapshot.SnapshotManager
 import com.vigipro.feature.player.ui.DetectionOverlay
 import com.vigipro.feature.player.ui.PlayerControlsOverlay
@@ -489,6 +493,25 @@ private fun VideoSurface(
             isActive = state.isDetectionActive,
         )
 
+        // Privacy mask overlay (always visible when zones exist and masking enabled)
+        if (state.privacyMaskingEnabled && state.privacyZones.isNotEmpty() && !state.isEditingPrivacyZones) {
+            PrivacyMaskOverlay(
+                zones = state.privacyZones,
+            )
+        }
+
+        // Privacy zone editor (interactive, when editing)
+        if (state.isEditingPrivacyZones) {
+            PrivacyZoneEditor(
+                zones = state.privacyZones,
+                onZoneAdded = { left, top, right, bottom ->
+                    viewModel.onAddPrivacyZone(left, top, right, bottom)
+                },
+                onZoneDeleted = viewModel::onDeletePrivacyZone,
+                onDismiss = viewModel::onTogglePrivacyZoneEditor,
+            )
+        }
+
         // Buffering indicator
         if (state.isBuffering && !state.isPlaying) {
             LoadingIndicator()
@@ -515,6 +538,17 @@ private fun VideoSurface(
                 .padding(16.dp),
         )
 
+        // Patrol status button (top-start, below controls)
+        if (state.camera?.ptzCapable == true && state.isPtzConnected && state.patrolState.isPatrolling) {
+            PatrolButton(
+                patrolState = state.patrolState,
+                onClick = viewModel::onShowPatrolSheet,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = if (state.isFullscreen) 72.dp else 56.dp),
+            )
+        }
+
         // Webhook button (bottom-end, above controls)
         WebhookButton(
             webhooks = state.webhooks,
@@ -533,6 +567,18 @@ private fun VideoSurface(
                 cameraId = state.camera?.id ?: "",
                 onSave = viewModel::onSaveWebhook,
                 onDismiss = viewModel::onDismissAddWebhook,
+            )
+        }
+
+        // Patrol config sheet
+        if (state.showPatrolSheet) {
+            PatrolConfigSheet(
+                presets = state.ptzPresets,
+                patrolState = state.patrolState,
+                cameraId = state.camera?.id ?: "",
+                onStartPatrol = viewModel::onStartPatrol,
+                onStopPatrol = viewModel::onStopPatrol,
+                onDismiss = viewModel::onDismissPatrolSheet,
             )
         }
 
@@ -575,6 +621,10 @@ private fun VideoSurface(
             isRecording = state.isRecording,
             recordingDurationMs = state.recordingDurationMs,
             onRecordClick = viewModel::onToggleRecording,
+            isPatrolling = state.patrolState.isPatrolling,
+            onPatrolClick = viewModel::onShowPatrolSheet,
+            onPrivacyZoneToggle = viewModel::onTogglePrivacyZoneEditor,
+            hasPrivacyZones = state.privacyZones.isNotEmpty(),
             modifier = if (state.isFullscreen) {
                 Modifier
                     .fillMaxSize()
