@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        Cleartext (HTTP) is required for:
+        - RTSP camera streams
+        - ONVIF SOAP/HTTP discovery and PTZ commands
+        - Webhooks to local network devices
+        All Supabase API calls use HTTPS by default.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

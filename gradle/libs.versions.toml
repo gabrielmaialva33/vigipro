@@ -57,6 +57,9 @@ work = "2.10.0"
 # Location
 play-services-location = "21.3.0"
 
+# Logging
+timber = "5.0.1"
+
 # Testing
 junit = "4.13.2"
 junit-android = "1.2.1"
@@ -155,6 +158,9 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 
 # WorkManager
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+
+# Logging
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 # Build logic deps
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }

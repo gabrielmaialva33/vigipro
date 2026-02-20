@@ -1,6 +1,7 @@
 package com.vigipro.feature.dashboard
 
 import com.vigipro.core.data.monitor.CameraStatusMonitor
+import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.model.Site
@@ -29,9 +30,12 @@ class DashboardViewModelTest {
         )
     }
     private val statusMonitor: CameraStatusMonitor = mockk(relaxed = true)
+    private val authRepository: AuthRepository = mockk(relaxed = true) {
+        every { currentUserEmail } returns "test@vigipro.com"
+    }
 
     private fun createViewModel() = DashboardViewModel(
-        cameraRepository, siteRepository, statusMonitor,
+        cameraRepository, siteRepository, statusMonitor, authRepository,
     )
 
     @Test
