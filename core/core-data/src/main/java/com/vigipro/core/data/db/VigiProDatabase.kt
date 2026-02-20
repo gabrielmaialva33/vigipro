@@ -6,14 +6,22 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [CameraEntity::class, SiteEntity::class, CameraEventEntity::class],
-    version = 3,
+    entities = [
+        CameraEntity::class,
+        SiteEntity::class,
+        CameraEventEntity::class,
+        RecordingEntity::class,
+        WebhookEntity::class,
+    ],
+    version = 4,
     exportSchema = true,
 )
 abstract class VigiProDatabase : RoomDatabase() {
     abstract fun cameraDao(): CameraDao
     abstract fun siteDao(): SiteDao
     abstract fun cameraEventDao(): CameraEventDao
+    abstract fun recordingDao(): RecordingDao
+    abstract fun webhookDao(): WebhookDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -51,6 +59,44 @@ abstract class VigiProDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_camera_events_timestamp ON camera_events(timestamp)",
                 )
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS recordings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        camera_id TEXT NOT NULL,
+                        camera_name TEXT NOT NULL,
+                        file_path TEXT NOT NULL,
+                        start_time INTEGER NOT NULL,
+                        end_time INTEGER NOT NULL DEFAULT 0,
+                        file_size INTEGER NOT NULL DEFAULT 0,
+                        duration_ms INTEGER NOT NULL DEFAULT 0,
+                        thumbnail_path TEXT
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recordings_camera_id ON recordings(camera_id)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recordings_start_time ON recordings(start_time)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS webhooks (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        camera_id TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        url TEXT NOT NULL,
+                        method TEXT NOT NULL DEFAULT 'POST',
+                        headers TEXT NOT NULL DEFAULT '{}',
+                        body TEXT,
+                        icon TEXT NOT NULL DEFAULT 'power'
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_webhooks_camera_id ON webhooks(camera_id)")
             }
         }
     }

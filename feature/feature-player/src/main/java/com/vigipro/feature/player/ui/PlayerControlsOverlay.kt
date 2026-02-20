@@ -8,21 +8,28 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeOff
@@ -65,6 +72,10 @@ fun PlayerControlsOverlay(
     onInfoClick: () -> Unit,
     onDetectionToggle: () -> Unit,
     onTalkbackToggle: () -> Unit,
+    onPipClick: () -> Unit,
+    isRecording: Boolean,
+    recordingDurationMs: Long,
+    onRecordClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -103,11 +114,19 @@ fun PlayerControlsOverlay(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (isRecording) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        RecordingIndicator(recordingDurationMs = recordingDurationMs)
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OverlayIconButton(
                         onClick = onInfoClick,
                         icon = { Icon(Icons.Default.Info, "Informacoes do stream", tint = Color.White) },
+                    )
+                    OverlayIconButton(
+                        onClick = onPipClick,
+                        icon = { Icon(Icons.Default.PictureInPictureAlt, "Picture-in-Picture", tint = Color.White) },
                     )
                     OverlayIconButton(
                         onClick = onFullscreenClick,
@@ -185,6 +204,16 @@ fun PlayerControlsOverlay(
                         icon = { Icon(Icons.Default.CameraAlt, "Captura", tint = Color.White) },
                     )
                     OverlayIconButton(
+                        onClick = onRecordClick,
+                        icon = {
+                            Icon(
+                                if (isRecording) Icons.Default.Stop else Icons.Default.FiberManualRecord,
+                                if (isRecording) "Parar gravacao" else "Gravar",
+                                tint = if (isRecording) Color(0xFFD32F2F) else Color.White,
+                            )
+                        },
+                    )
+                    OverlayIconButton(
                         onClick = onPlayPauseClick,
                         icon = {
                             Icon(
@@ -198,6 +227,39 @@ fun PlayerControlsOverlay(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RecordingIndicator(
+    recordingDurationMs: Long,
+    modifier: Modifier = Modifier,
+) {
+    val totalSeconds = (recordingDurationMs / 1000).toInt()
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    val timerText = String.format("%02d:%02d", minutes, seconds)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .background(
+                color = Color(0xCCD32F2F),
+                shape = RoundedCornerShape(4.dp),
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(Color.White, RoundedCornerShape(4.dp)),
+        )
+        Text(
+            text = timerText,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White,
+        )
     }
 }
 

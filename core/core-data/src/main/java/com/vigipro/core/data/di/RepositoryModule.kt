@@ -8,10 +8,14 @@ import com.vigipro.core.data.repository.EventRepository
 import com.vigipro.core.data.repository.InvitationRepository
 import com.vigipro.core.data.repository.LocalCameraRepository
 import com.vigipro.core.data.repository.LocalEventRepository
+import com.vigipro.core.data.repository.LocalRecordingRepository
+import com.vigipro.core.data.repository.LocalWebhookRepository
+import com.vigipro.core.data.repository.RecordingRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.repository.SupabaseAuthRepository
 import com.vigipro.core.data.repository.SupabaseInvitationRepository
 import com.vigipro.core.data.repository.SupabaseSiteRepository
+import com.vigipro.core.data.repository.WebhookRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +42,10 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindEventRepository(impl: LocalEventRepository): EventRepository
+
+    @Binds
+    abstract fun bindRecordingRepository(impl: LocalRecordingRepository): RecordingRepository
+
+    @Binds
+    abstract fun bindWebhookRepository(impl: LocalWebhookRepository): WebhookRepository
 }

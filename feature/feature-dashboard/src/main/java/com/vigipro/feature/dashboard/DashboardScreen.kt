@@ -34,9 +34,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -82,6 +84,8 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToAccessControl: () -> Unit = {},
     onNavigateToEventTimeline: () -> Unit = {},
+    onNavigateToMultiview: () -> Unit = {},
+    onNavigateToRecordings: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -96,6 +100,8 @@ fun DashboardScreen(
             DashboardSideEffect.NavigateToSettings -> onNavigateToSettings()
             DashboardSideEffect.NavigateToAccessControl -> onNavigateToAccessControl()
             DashboardSideEffect.NavigateToEventTimeline -> onNavigateToEventTimeline()
+            DashboardSideEffect.NavigateToMultiview -> onNavigateToMultiview()
+            DashboardSideEffect.NavigateToRecordings -> onNavigateToRecordings()
         }
     }
 
@@ -145,6 +151,26 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = viewModel::onMultiviewClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(Icons.Default.GridView, "Multiview", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = viewModel::onRecordingsClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(Icons.Default.VideoLibrary, "Gravacoes", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = viewModel::onEventTimelineClick,
                         modifier = Modifier

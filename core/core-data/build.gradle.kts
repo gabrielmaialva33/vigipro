@@ -25,6 +25,11 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // Media3 / ExoPlayer (for StreamRecorder)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.exoplayer.rtsp)
+    implementation(libs.media3.common)
+
     // ML Kit Object Detection
     implementation(libs.mlkit.od.custom)
 

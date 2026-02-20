@@ -20,6 +20,9 @@ import com.vigipro.feature.dashboard.DashboardScreen
 import com.vigipro.feature.dashboard.EventTimelineScreen
 import com.vigipro.feature.devices.addcamera.AddCameraScreen
 import com.vigipro.feature.player.PlayerScreen
+import com.vigipro.feature.player.multiview.MultiviewScreen
+import com.vigipro.feature.player.recordings.PlaybackScreen
+import com.vigipro.feature.player.recordings.RecordingsScreen
 import com.vigipro.feature.settings.SettingsScreen
 
 private const val ANIM_DURATION = 350
@@ -94,6 +97,21 @@ fun VigiProNavHost() {
                 onNavigateToEventTimeline = {
                     navController.navigate("event_timeline")
                 },
+                onNavigateToMultiview = {
+                    navController.navigate("multiview")
+                },
+                onNavigateToRecordings = {
+                    navController.navigate("recordings")
+                },
+            )
+        }
+
+        composable("multiview") {
+            MultiviewScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPlayer = { cameraId ->
+                    navController.navigate("player/$cameraId")
+                },
             )
         }
 
@@ -150,6 +168,26 @@ fun VigiProNavHost() {
 
         composable("event_timeline") {
             EventTimelineScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("recordings") {
+            RecordingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPlayback = { filePath ->
+                    navController.navigate("playback/${java.net.URLEncoder.encode(filePath, "UTF-8")}")
+                },
+            )
+        }
+
+        composable(
+            route = "playback/{filePath}",
+            arguments = listOf(navArgument("filePath") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val filePath = backStackEntry.arguments?.getString("filePath") ?: ""
+            PlaybackScreen(
+                filePath = filePath,
                 onBack = { navController.popBackStack() },
             )
         }

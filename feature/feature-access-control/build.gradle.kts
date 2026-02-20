@@ -22,6 +22,10 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
 
+    // Guava ListenableFuture (required by CameraX)
+    implementation("androidx.concurrent:concurrent-futures:1.2.0")
+    implementation("com.google.guava:guava:33.4.0-android")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

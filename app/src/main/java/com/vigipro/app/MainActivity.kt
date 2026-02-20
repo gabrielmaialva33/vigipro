@@ -1,7 +1,9 @@
 package com.vigipro.app
 
 import android.animation.ObjectAnimator
+import android.app.PictureInPictureParams
 import android.os.Bundle
+import android.util.Rational
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.activity.ComponentActivity
@@ -71,5 +73,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (isInPictureInPictureMode) return
+        enterPipMode()
+    }
+
+    private fun enterPipMode() {
+        val pipParams = PictureInPictureParams.Builder()
+            .setAspectRatio(Rational(16, 9))
+            .build()
+        enterPictureInPictureMode(pipParams)
     }
 }

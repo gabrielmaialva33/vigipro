@@ -52,6 +52,13 @@ dependencies {
     // Compose icons
     implementation(libs.compose.material.icons.extended)
 
+    // Glance (Widgets)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.junit.android)

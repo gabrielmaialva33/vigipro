@@ -11,10 +11,14 @@ import com.vigipro.core.data.detection.FrameCaptureHelper
 import com.vigipro.core.data.detection.ObjectDetectionEngine
 import com.vigipro.core.data.notification.CameraNotificationHelper
 import com.vigipro.core.data.preferences.UserPreferencesRepository
+import com.vigipro.core.data.recording.StreamRecorder
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.EventRepository
+import com.vigipro.core.data.repository.WebhookRepository
+import com.vigipro.core.data.webhook.WebhookExecutor
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraEventType
+import com.vigipro.core.model.WebhookAction
 import com.vigipro.core.model.DetectedObject
 import com.vigipro.core.model.DetectionCategory
 import com.vigipro.feature.player.ptz.OnvifPtzClient
@@ -52,6 +56,13 @@ data class PlayerState(
     val talkbackAvailable: Boolean = false,
     val hasMicPermission: Boolean = false,
     val talkbackEnabled: Boolean = true,
+    val isRecording: Boolean = false,
+    val recordingDurationMs: Long = 0,
+    val webhooks: List<WebhookAction> = emptyList(),
+    val isWebhookExecuting: Boolean = false,
+    val showAddWebhookDialog: Boolean = false,
+    val isSubStream: Boolean = false,
+    val retriedWithSubStream: Boolean = false,
 )
 
 sealed interface PlayerSideEffect {
@@ -61,6 +72,9 @@ sealed interface PlayerSideEffect {
     data class ShareSnapshot(val uri: Uri) : PlayerSideEffect
     data class ShowSnackbar(val message: String) : PlayerSideEffect
     data object RequestMicPermission : PlayerSideEffect
+    data object EnterPipMode : PlayerSideEffect
+    data class ShareRecording(val file: java.io.File) : PlayerSideEffect
+    data class SwitchToSubStream(val subStreamUrl: String) : PlayerSideEffect
 }
 
 @HiltViewModel
@@ -73,6 +87,9 @@ class PlayerViewModel @Inject constructor(
     private val detectionEngine: ObjectDetectionEngine,
     private val notificationHelper: CameraNotificationHelper,
     private val audioCaptureManager: AudioCaptureManager,
+    private val streamRecorder: StreamRecorder,
+    private val webhookRepository: WebhookRepository,
+    private val webhookExecutor: WebhookExecutor,
 ) : ViewModel(), ContainerHost<PlayerState, PlayerSideEffect> {
 
     private val cameraId: String = checkNotNull(savedStateHandle["cameraId"])
@@ -88,9 +105,11 @@ class PlayerViewModel @Inject constructor(
         loadAudioPreference()
         loadDetectionPreference()
         loadTalkbackPreference()
+        loadWebhooks()
     }
 
     override fun onCleared() {
+        viewModelScope.launch { streamRecorder.stopRecording() }
         super.onCleared()
         ptzClient.disconnect()
         stopDetection()
@@ -394,5 +413,118 @@ class PlayerViewModel @Inject constructor(
 
     fun onRetry() = intent {
         reduce { state.copy(errorMessage = null, isBuffering = true) }
+    }
+
+    // Recording
+    fun onToggleRecording() = intent {
+        if (state.isRecording) {
+            val file = streamRecorder.stopRecording()
+            reduce { state.copy(isRecording = false, recordingDurationMs = 0) }
+            if (file != null) {
+                postSideEffect(PlayerSideEffect.ShowSnackbar("Gravacao salva"))
+                postSideEffect(PlayerSideEffect.ShareRecording(file))
+            }
+        } else {
+            val camera = state.camera ?: return@intent
+            val rtspUrl = camera.rtspUrl ?: return@intent
+            val res = state.resolution.split("x")
+            val w = res.getOrNull(0)?.toIntOrNull() ?: 640
+            val h = res.getOrNull(1)?.toIntOrNull() ?: 480
+            val started = streamRecorder.startRecording(rtspUrl, camera.id, camera.name, w, h)
+            if (started) {
+                reduce { state.copy(isRecording = true) }
+                startRecordingTimer()
+            } else {
+                postSideEffect(PlayerSideEffect.ShowSnackbar("Falha ao iniciar gravacao"))
+            }
+        }
+    }
+
+    private fun startRecordingTimer() {
+        viewModelScope.launch {
+            while (streamRecorder.isRecording) {
+                val elapsed = System.currentTimeMillis() - streamRecorder.recordingStartTime
+                intent { reduce { state.copy(recordingDurationMs = elapsed) } }
+                delay(1000L)
+            }
+        }
+    }
+
+    // Webhooks
+    private fun loadWebhooks() = intent {
+        val camera = state.camera ?: return@intent
+        webhookRepository.getWebhooksByCamera(camera.id).collect { hooks ->
+            reduce { state.copy(webhooks = hooks) }
+        }
+    }
+
+    fun onExecuteWebhook(webhook: WebhookAction) = intent {
+        reduce { state.copy(isWebhookExecuting = true) }
+        val result = webhookExecutor.execute(
+            url = webhook.url,
+            method = webhook.method.name,
+            headers = webhook.headers,
+            body = webhook.body,
+        )
+        reduce { state.copy(isWebhookExecuting = false) }
+        val msg = if (result.success) {
+            "${webhook.name}: Sucesso"
+        } else {
+            "${webhook.name}: Falha (${result.message})"
+        }
+        postSideEffect(PlayerSideEffect.ShowSnackbar(msg))
+    }
+
+    fun onShowAddWebhook() = intent {
+        reduce { state.copy(showAddWebhookDialog = true) }
+    }
+
+    fun onDismissAddWebhook() = intent {
+        reduce { state.copy(showAddWebhookDialog = false) }
+    }
+
+    fun onSaveWebhook(webhook: WebhookAction) = intent {
+        webhookRepository.saveWebhook(webhook)
+        reduce { state.copy(showAddWebhookDialog = false) }
+    }
+
+    fun onDeleteWebhook(webhookId: String) = intent {
+        webhookRepository.deleteWebhook(webhookId)
+    }
+
+    // Stream quality fallback
+    fun onSwitchToSubStream() = intent {
+        val camera = state.camera ?: return@intent
+        val originalUrl = camera.rtspUrl ?: return@intent
+        val subUrl = deriveSubStreamUrl(originalUrl)
+        reduce {
+            state.copy(
+                isSubStream = true,
+                retriedWithSubStream = true,
+                errorMessage = null,
+                isBuffering = true,
+            )
+        }
+        postSideEffect(PlayerSideEffect.SwitchToSubStream(subUrl))
+        postSideEffect(PlayerSideEffect.ShowSnackbar("Qualidade reduzida para conexao estavel"))
+    }
+
+    fun onEnterPip() = intent {
+        postSideEffect(PlayerSideEffect.EnterPipMode)
+    }
+
+    companion object {
+        fun deriveSubStreamUrl(mainUrl: String): String {
+            return when {
+                mainUrl.contains("subtype=0") ->
+                    mainUrl.replace("subtype=0", "subtype=1")
+                mainUrl.contains("subtype=") ->
+                    mainUrl // Already a sub stream or custom, leave as-is
+                mainUrl.contains("?") ->
+                    "$mainUrl&subtype=1"
+                else ->
+                    "$mainUrl?subtype=1"
+            }
+        }
     }
 }

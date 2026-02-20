@@ -1,8 +1,10 @@
 package com.vigipro.feature.player
 
 import android.Manifest
+import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Rational
 import android.view.SurfaceView
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -64,6 +66,8 @@ import com.vigipro.feature.player.ui.PtzControlPad
 import com.vigipro.feature.player.ui.StreamInfoOverlay
 import com.vigipro.feature.player.util.FullscreenHelper
 import com.vigipro.feature.player.util.findActivity
+import com.vigipro.feature.player.webhook.AddWebhookDialog
+import com.vigipro.feature.player.webhook.WebhookButton
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -83,6 +87,22 @@ fun PlayerScreen(
     val snapshotManager = remember { SnapshotManager(context) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
 
+    // Detect PiP mode
+    val activity = context.findActivity()
+    var isInPipMode by remember { mutableStateOf(false) }
+
+    // Track PiP mode changes via lifecycle
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val pipObserver = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_RESUME) {
+                isInPipMode = activity?.isInPictureInPictureMode == true
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(pipObserver)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(pipObserver) }
+    }
+
     // Mic permission for talkback
     val micPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -98,6 +118,21 @@ fun PlayerScreen(
     // Handle back press in fullscreen
     BackHandler(enabled = state.isFullscreen) {
         viewModel.onBack()
+    }
+
+    val exoPlayer = remember {
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                /* minBufferMs = */ 1_000,
+                /* maxBufferMs = */ 5_000,
+                /* bufferForPlaybackMs = */ 500,
+                /* bufferForPlaybackAfterRebufferMs = */ 1_000,
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
+        ExoPlayer.Builder(context)
+            .setLoadControl(loadControl)
+            .build()
     }
 
     // Side effects
@@ -138,33 +173,55 @@ fun PlayerScreen(
             PlayerSideEffect.RequestMicPermission -> {
                 micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
             }
+            PlayerSideEffect.EnterPipMode -> {
+                context.findActivity()?.let { act ->
+                    val pipParams = PictureInPictureParams.Builder()
+                        .setAspectRatio(Rational(16, 9))
+                        .build()
+                    act.enterPictureInPictureMode(pipParams)
+                }
+            }
+            is PlayerSideEffect.ShareRecording -> {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "video/mp4"
+                    putExtra(Intent.EXTRA_STREAM, androidx.core.content.FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        sideEffect.file,
+                    ))
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Compartilhar gravacao"))
+            }
+            is PlayerSideEffect.SwitchToSubStream -> {
+                val subStreamSource = RtspMediaSource.Factory()
+                    .setForceUseRtpTcp(true)
+                    .setTimeoutMs(10_000L)
+                    .createMediaSource(MediaItem.fromUri(sideEffect.subStreamUrl))
+                exoPlayer.stop()
+                exoPlayer.setMediaSource(subStreamSource)
+                exoPlayer.prepare()
+                exoPlayer.playWhenReady = true
+            }
         }
     }
 
-    val exoPlayer = remember {
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                /* minBufferMs = */ 1_000,
-                /* maxBufferMs = */ 5_000,
-                /* bufferForPlaybackMs = */ 500,
-                /* bufferForPlaybackAfterRebufferMs = */ 1_000,
-            )
-            .setPrioritizeTimeOverSizeThresholds(true)
-            .build()
-        ExoPlayer.Builder(context)
-            .setLoadControl(loadControl)
-            .build()
-    }
-
-    // Lifecycle-aware pause/resume
-    val lifecycleOwner = LocalLifecycleOwner.current
+    // Lifecycle-aware pause/resume (PiP-aware)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> {
-                    exoPlayer.pause()
+                    val inPip = activity?.isInPictureInPictureMode == true
+                    if (!inPip) {
+                        // Normal pause: stop everything
+                        exoPlayer.pause()
+                    }
+                    // Always stop detection, talkback, and recording (even in PiP)
                     viewModel.stopDetection()
                     viewModel.onTalkbackRelease()
+                    if (state.isRecording) {
+                        viewModel.onToggleRecording()
+                    }
                 }
                 Lifecycle.Event.ON_RESUME -> {
                     if (exoPlayer.playbackState != Player.STATE_IDLE) {
@@ -212,9 +269,13 @@ fun PlayerScreen(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                viewModel.onPlaybackError(
-                    error.localizedMessage ?: "Erro de reproducao",
-                )
+                if (!state.retriedWithSubStream) {
+                    viewModel.onSwitchToSubStream()
+                } else {
+                    viewModel.onPlaybackError(
+                        error.localizedMessage ?: "Erro de reproducao",
+                    )
+                }
             }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -240,7 +301,14 @@ fun PlayerScreen(
         }
     }
 
-    if (state.isFullscreen) {
+    if (isInPipMode) {
+        // PiP mode: video only, no controls or UI chrome
+        PipPlayerContent(
+            exoPlayer = exoPlayer,
+            viewModel = viewModel,
+            onPlayerViewCreated = { playerViewRef = it },
+        )
+    } else if (state.isFullscreen) {
         FullscreenPlayerContent(
             state = state,
             exoPlayer = exoPlayer,
@@ -342,6 +410,40 @@ private fun FullscreenPlayerContent(
 
 @OptIn(UnstableApi::class)
 @Composable
+private fun PipPlayerContent(
+    exoPlayer: ExoPlayer,
+    viewModel: PlayerViewModel,
+    onPlayerViewCreated: (PlayerView) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center,
+    ) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    useController = false
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                }
+            },
+            update = { view ->
+                view.player = exoPlayer
+                onPlayerViewCreated(view)
+                viewModel.setSurfaceView(view.videoSurfaceView as? SurfaceView)
+            },
+            onRelease = { view ->
+                view.player = null
+                viewModel.setSurfaceView(null)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
 private fun VideoSurface(
     state: PlayerState,
     exoPlayer: ExoPlayer,
@@ -413,6 +515,27 @@ private fun VideoSurface(
                 .padding(16.dp),
         )
 
+        // Webhook button (bottom-end, above controls)
+        WebhookButton(
+            webhooks = state.webhooks,
+            onExecute = viewModel::onExecuteWebhook,
+            isExecuting = state.isWebhookExecuting,
+            onAddWebhook = viewModel::onShowAddWebhook,
+            onDeleteWebhook = viewModel::onDeleteWebhook,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+        )
+
+        // Add Webhook dialog
+        if (state.showAddWebhookDialog) {
+            AddWebhookDialog(
+                cameraId = state.camera?.id ?: "",
+                onSave = viewModel::onSaveWebhook,
+                onDismiss = viewModel::onDismissAddWebhook,
+            )
+        }
+
         // PTZ control pad (center-left)
         PtzControlPad(
             isVisible = state.showPtzControls && state.isPtzConnected,
@@ -448,6 +571,10 @@ private fun VideoSurface(
             onInfoClick = viewModel::onToggleStreamInfo,
             onDetectionToggle = viewModel::onToggleDetection,
             onTalkbackToggle = onTalkbackToggle,
+            onPipClick = viewModel::onEnterPip,
+            isRecording = state.isRecording,
+            recordingDurationMs = state.recordingDurationMs,
+            onRecordClick = viewModel::onToggleRecording,
             modifier = if (state.isFullscreen) {
                 Modifier
                     .fillMaxSize()
