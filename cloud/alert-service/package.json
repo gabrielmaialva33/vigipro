@@ -1,0 +1,17 @@
+{
+  "name": "vigipro-alert-service",
+  "version": "1.0.0",
+  "description": "VigiPro Cloud Run service — processa alertas de cameras e envia push via FCM",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "firebase-admin": "^13.0.0",
+    "@google-cloud/pubsub": "^4.9.0",
+    "@google-cloud/secret-manager": "^5.6.0",
+    "@google-cloud/video-intelligence": "^5.0.0"
+  }
+}

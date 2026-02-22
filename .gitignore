@@ -24,6 +24,9 @@ keystore.properties
 # Build outputs
 build-logic/convention/bin/
 
+# Node
+node_modules/
+
 # Temp
 console_debug.txt
 fix_phosphor_icons.py

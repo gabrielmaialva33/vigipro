@@ -6,6 +6,8 @@ import com.vigipro.core.data.monitor.CameraStatusMonitor
 import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.SiteRepository
+import com.vigipro.core.data.seed.DevSeedHelper
+import com.vigipro.core.data.sync.CloudSyncManager
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.Site
 import com.vigipro.core.ui.components.GridLayout
@@ -42,17 +44,26 @@ class DashboardViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val statusMonitor: CameraStatusMonitor,
     private val authRepository: AuthRepository,
+    private val devSeedHelper: DevSeedHelper,
+    private val cloudSyncManager: CloudSyncManager,
 ) : ViewModel(), ContainerHost<DashboardState, DashboardSideEffect> {
 
     override val container = viewModelScope.container<DashboardState, DashboardSideEffect>(DashboardState()) {
         observeSites()
+        devSeedHelper.seedIfEmpty()
         observeCameras()
         loadUserInfo()
         statusMonitor.start(viewModelScope)
+        syncToCloud()
     }
 
     private fun loadUserInfo() = intent {
         reduce { state.copy(userEmail = authRepository.currentUserEmail) }
+    }
+
+    private fun syncToCloud() = intent {
+        // Background sync — fire and forget, don't block UI
+        cloudSyncManager.syncAll()
     }
 
     override fun onCleared() {
@@ -81,13 +92,10 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun onSiteSelected(siteId: String) = intent {
-        reduce { state.copy(selectedSiteId = siteId) }
-        // Re-filter cameras
-        cameraRepository.getAllCameras().collect { cameras ->
-            reduce {
-                state.copy(cameras = cameras.filter { it.siteId == siteId })
-            }
-        }
+        // Simply update selected site — observeCameras() already filters reactively
+        // based on state.selectedSiteId. Launching a new collect here was a bug:
+        // each call stacked a new active collector without cancelling the previous one.
+        reduce { state.copy(selectedSiteId = siteId, isLoading = true) }
     }
 
     fun onCameraClick(cameraId: String) = intent {

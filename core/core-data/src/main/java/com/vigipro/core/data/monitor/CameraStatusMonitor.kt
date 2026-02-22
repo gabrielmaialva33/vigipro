@@ -2,11 +2,14 @@ package com.vigipro.core.data.monitor
 
 import com.vigipro.core.data.notification.CameraNotificationHelper
 import com.vigipro.core.data.preferences.UserPreferencesRepository
+import com.vigipro.core.data.repository.AlertRepository
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.CloudRepository
 import com.vigipro.core.data.repository.EventRepository
 import com.vigipro.core.data.rtsp.RtspConnectionTester
 import com.vigipro.core.model.CameraEventType
 import com.vigipro.core.model.CameraStatus
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,6 +26,8 @@ class CameraStatusMonitor @Inject constructor(
     private val eventRepository: EventRepository,
     private val notificationHelper: CameraNotificationHelper,
     private val preferencesRepository: UserPreferencesRepository,
+    private val cloudRepository: CloudRepository,
+    private val alertRepository: AlertRepository,
 ) {
     private var monitorJob: Job? = null
 
@@ -67,6 +72,27 @@ class CameraStatusMonitor @Inject constructor(
                     cameraName = camera.name,
                     type = eventType,
                 )
+
+                // Report status change to cloud (best-effort, don't block)
+                try {
+                    cloudRepository.updateCameraStatus(camera.id, newStatus.name)
+                } catch (e: Exception) {
+                    Log.d("CameraMonitor", "Cloud status update failed for ${camera.id}")
+                }
+
+                // Broadcast alerta via Cloud Run → FCM push pra membros do site
+                if (newStatus == CameraStatus.OFFLINE) {
+                    try {
+                        alertRepository.sendBroadcast(
+                            siteId = camera.siteId,
+                            alertType = "CAMERA_OFFLINE",
+                            cameraName = camera.name,
+                            message = "Camera ${camera.name} ficou offline",
+                        )
+                    } catch (e: Exception) {
+                        Log.d("CameraMonitor", "Alert broadcast failed for ${camera.name}")
+                    }
+                }
 
                 if (newStatus == CameraStatus.OFFLINE && prefs.notifyOffline) {
                     notificationHelper.notifyCameraOffline(camera.id, camera.name)

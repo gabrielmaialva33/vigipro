@@ -4,6 +4,8 @@ import com.vigipro.core.data.monitor.CameraStatusMonitor
 import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.SiteRepository
+import com.vigipro.core.data.seed.DevSeedHelper
+import com.vigipro.core.data.sync.CloudSyncManager
 import com.vigipro.core.model.Site
 import com.vigipro.core.ui.components.GridLayout
 import io.mockk.every
@@ -33,9 +35,11 @@ class DashboardViewModelTest {
     private val authRepository: AuthRepository = mockk(relaxed = true) {
         every { currentUserEmail } returns "test@vigipro.com"
     }
+    private val devSeedHelper: DevSeedHelper = mockk(relaxed = true)
+    private val cloudSyncManager: CloudSyncManager = mockk(relaxed = true)
 
     private fun createViewModel() = DashboardViewModel(
-        cameraRepository, siteRepository, statusMonitor, authRepository,
+        cameraRepository, siteRepository, statusMonitor, authRepository, devSeedHelper, cloudSyncManager,
     )
 
     @Test

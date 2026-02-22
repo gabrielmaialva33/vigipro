@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.repository.CameraRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.rtsp.RtspConnectionTester
+import com.vigipro.core.data.sync.CloudSyncManager
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraStatus
 import com.vigipro.feature.devices.onvif.OnvifDeviceInfo
@@ -97,6 +98,7 @@ class AddCameraViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val connectionTester: RtspConnectionTester,
     private val onvifDiscovery: OnvifDiscoveryService,
+    private val cloudSyncManager: CloudSyncManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), ContainerHost<AddCameraState, AddCameraSideEffect> {
 
@@ -249,9 +251,11 @@ class AddCameraViewModel @Inject constructor(
 
             if (state.isEditMode) {
                 cameraRepository.updateCamera(camera)
+                cloudSyncManager.syncAll()
                 postSideEffect(AddCameraSideEffect.CameraUpdated)
             } else {
                 cameraRepository.addCamera(camera)
+                cloudSyncManager.syncAll()
                 postSideEffect(AddCameraSideEffect.CameraAdded)
             }
         } catch (e: Exception) {
@@ -264,6 +268,7 @@ class AddCameraViewModel @Inject constructor(
         val id = state.editCameraId ?: return@intent
         try {
             cameraRepository.deleteCamera(id)
+            cloudSyncManager.syncAll()
             postSideEffect(AddCameraSideEffect.CameraDeleted)
         } catch (e: Exception) {
             postSideEffect(AddCameraSideEffect.ShowError("Erro ao excluir camera. Tente novamente"))
