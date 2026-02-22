@@ -16,26 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.FiberManualRecord
-import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.FullscreenExit
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PictureInPictureAlt
-import androidx.compose.material.icons.filled.OpenWith
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.Route
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -111,7 +96,7 @@ fun PlayerControlsOverlay(
                 ) {
                     OverlayIconButton(
                         onClick = onBackClick,
-                        icon = { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Color.White) },
+                        icon = { Icon(PhosphorIcons.Regular.ArrowLeft, "Voltar", tint = Color.White) },
                     )
                     Text(
                         text = cameraName,
@@ -128,17 +113,17 @@ fun PlayerControlsOverlay(
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     OverlayIconButton(
                         onClick = onInfoClick,
-                        icon = { Icon(Icons.Default.Info, "Informacoes do stream", tint = Color.White) },
+                        icon = { Icon(PhosphorIcons.Regular.Info, "Informacoes do stream", tint = Color.White) },
                     )
                     OverlayIconButton(
                         onClick = onPipClick,
-                        icon = { Icon(Icons.Default.PictureInPictureAlt, "Picture-in-Picture", tint = Color.White) },
+                        icon = { Icon(PhosphorIcons.Regular.PictureInPicture, "Picture-in-Picture", tint = Color.White) },
                     )
                     OverlayIconButton(
                         onClick = onFullscreenClick,
                         icon = {
                             Icon(
-                                if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                                if (isFullscreen) PhosphorIcons.Regular.CornersIn else PhosphorIcons.Regular.CornersOut,
                                 if (isFullscreen) "Sair da tela cheia" else "Tela cheia",
                                 tint = Color.White,
                             )
@@ -162,7 +147,7 @@ fun PlayerControlsOverlay(
                             onClick = onPtzToggle,
                             icon = {
                                 Icon(
-                                    Icons.Default.OpenWith,
+                                    PhosphorIcons.Regular.ArrowsOut,
                                     if (showPtzControls) "Ocultar controle PTZ" else "Mostrar controle PTZ",
                                     tint = if (showPtzControls) MaterialTheme.colorScheme.primary else Color.White,
                                 )
@@ -172,7 +157,7 @@ fun PlayerControlsOverlay(
                             onClick = onPatrolClick,
                             icon = {
                                 Icon(
-                                    Icons.Default.Route,
+                                    PhosphorIcons.Regular.Path,
                                     if (isPatrolling) "Patrulha ativa" else "Patrulha",
                                     tint = if (isPatrolling) Color(0xFF4CAF50) else Color.White,
                                 )
@@ -184,7 +169,7 @@ fun PlayerControlsOverlay(
                             onClick = onDetectionToggle,
                             icon = {
                                 Icon(
-                                    if (isDetectionActive) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    if (isDetectionActive) PhosphorIcons.Regular.Eye else PhosphorIcons.Regular.EyeSlash,
                                     if (isDetectionActive) "Desativar deteccao" else "Ativar deteccao",
                                     tint = if (isDetectionActive) Color(0xFFFF9800) else Color.White,
                                 )
@@ -196,7 +181,7 @@ fun PlayerControlsOverlay(
                             onClick = onTalkbackToggle,
                             icon = {
                                 Icon(
-                                    if (isTalkbackActive) Icons.Default.Mic else Icons.Default.MicOff,
+                                    if (isTalkbackActive) PhosphorIcons.Regular.Microphone else PhosphorIcons.Regular.MicrophoneSlash,
                                     if (isTalkbackActive) "Audio bidirecional ativo" else "Ativar audio bidirecional",
                                     tint = if (isTalkbackActive) Color(0xFFD32F2F) else Color.White,
                                 )
@@ -207,7 +192,7 @@ fun PlayerControlsOverlay(
                         onClick = onPrivacyZoneToggle,
                         icon = {
                             Icon(
-                                Icons.Default.Shield,
+                                PhosphorIcons.Regular.Shield,
                                 "Mascaras de privacidade",
                                 tint = if (hasPrivacyZones) Color(0xFF7C4DFF) else Color.White,
                             )
@@ -219,7 +204,7 @@ fun PlayerControlsOverlay(
                         onClick = onAudioToggle,
                         icon = {
                             Icon(
-                                if (isAudioEnabled) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                                if (isAudioEnabled) PhosphorIcons.Regular.SpeakerHigh else PhosphorIcons.Regular.SpeakerSlash,
                                 if (isAudioEnabled) "Desativar audio" else "Ativar audio",
                                 tint = Color.White,
                             )
@@ -227,13 +212,13 @@ fun PlayerControlsOverlay(
                     )
                     OverlayIconButton(
                         onClick = onSnapshotClick,
-                        icon = { Icon(Icons.Default.CameraAlt, "Captura", tint = Color.White) },
+                        icon = { Icon(PhosphorIcons.Regular.Camera, "Captura", tint = Color.White) },
                     )
                     OverlayIconButton(
                         onClick = onRecordClick,
                         icon = {
                             Icon(
-                                if (isRecording) Icons.Default.Stop else Icons.Default.FiberManualRecord,
+                                if (isRecording) PhosphorIcons.Regular.Stop else PhosphorIcons.Regular.Circle,
                                 if (isRecording) "Parar gravacao" else "Gravar",
                                 tint = if (isRecording) Color(0xFFD32F2F) else Color.White,
                             )
@@ -243,7 +228,7 @@ fun PlayerControlsOverlay(
                         onClick = onPlayPauseClick,
                         icon = {
                             Icon(
-                                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                if (isPlaying) PhosphorIcons.Regular.Pause else PhosphorIcons.Regular.Play,
                                 if (isPlaying) "Pausar" else "Reproduzir",
                                 tint = Color.White,
                                 modifier = Modifier.size(Dimens.PlayerControlIconSize + 4.dp),

@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.VideoLibrary
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -132,7 +132,7 @@ fun RecordingsScreen(
             }
             state.recordings.isEmpty() -> {
                 EmptyState(
-                    icon = Icons.Default.VideoLibrary,
+                    icon = PhosphorIcons.Regular.VideoCamera,
                     title = "Nenhuma gravacao",
                     subtitle = "Grave videos das suas cameras para revisa-los aqui",
                     modifier = Modifier.padding(padding),
@@ -262,7 +262,7 @@ private fun RecordingCard(
                     modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = PhosphorIcons.Regular.Play,
                         contentDescription = "Reproduzir",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp),
@@ -273,7 +273,7 @@ private fun RecordingCard(
                     modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Share,
+                        imageVector = PhosphorIcons.Regular.ShareNetwork,
                         contentDescription = "Compartilhar",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
@@ -284,7 +284,7 @@ private fun RecordingCard(
                     modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
+                        imageVector = PhosphorIcons.Regular.Trash,
                         contentDescription = "Excluir",
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp),

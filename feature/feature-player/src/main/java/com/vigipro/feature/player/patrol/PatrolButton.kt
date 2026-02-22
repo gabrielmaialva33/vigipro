@@ -17,8 +17,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Route
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,7 +73,7 @@ fun PatrolButton(
                 ),
         ) {
             Icon(
-                imageVector = Icons.Default.Route,
+                imageVector = PhosphorIcons.Regular.Path,
                 contentDescription = if (patrolState.isPatrolling) "Parar patrulha" else "Patrulha",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp),

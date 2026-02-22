@@ -23,10 +23,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GridView
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -70,6 +71,9 @@ import com.vigipro.core.ui.components.EmptyState
 import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.components.VigiProTopBar
 import com.vigipro.core.ui.theme.Dimens
+import com.vigipro.core.ui.theme.StatusError
+import com.vigipro.core.ui.theme.StatusOffline
+import com.vigipro.core.ui.theme.StatusOnline
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -103,7 +107,7 @@ fun MultiviewScreen(
                 actions = {
                     if (state.selectedCameras.isNotEmpty()) {
                         IconButton(onClick = { showCameraPicker = true }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar cameras")
+                            Icon(PhosphorIcons.Regular.PencilSimple, contentDescription = "Editar cameras")
                         }
                     }
                 },
@@ -205,7 +209,7 @@ private fun LayoutModeSelector(
                 onClick = { onLayoutChange(layout) },
                 label = { Text(layout.label) },
                 leadingIcon = if (currentLayout == layout) {
-                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    { Icon(PhosphorIcons.Regular.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 } else {
                     null
                 },
@@ -246,7 +250,7 @@ private fun CameraPicker(
         )
         if (cameras.isEmpty()) {
             EmptyState(
-                icon = Icons.Default.GridView,
+                icon = PhosphorIcons.Regular.GridFour,
                 title = "Nenhuma Camera Disponivel",
                 subtitle = "Adicione cameras ao sistema para utilizar o modo multiview.",
             )
@@ -302,9 +306,9 @@ private fun CameraPickerList(
                         .clip(CircleShape)
                         .background(
                             when (camera.status) {
-                                CameraStatus.ONLINE -> Color(0xFF4CAF50)
-                                CameraStatus.OFFLINE -> Color(0xFF9E9E9E)
-                                CameraStatus.ERROR -> Color(0xFFF44336)
+                                CameraStatus.ONLINE -> StatusOnline
+                                CameraStatus.OFFLINE -> StatusOffline
+                                CameraStatus.ERROR -> StatusError
                             },
                         ),
                 )
@@ -585,9 +589,9 @@ private fun MultiviewCell(
                         .clip(CircleShape)
                         .background(
                             when (camera.status) {
-                                CameraStatus.ONLINE -> Color(0xFF4CAF50)
-                                CameraStatus.OFFLINE -> Color(0xFF9E9E9E)
-                                CameraStatus.ERROR -> Color(0xFFF44336)
+                                CameraStatus.ONLINE -> StatusOnline
+                                CameraStatus.OFFLINE -> StatusOffline
+                                CameraStatus.ERROR -> StatusError
                             },
                         ),
                 )

@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Schedule
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +63,7 @@ fun TimeWindowPicker(
                 onValueChange = onTimeStartChange,
                 label = { Text("Inicio") },
                 leadingIcon = {
-                    Icon(Icons.Default.Schedule, contentDescription = null)
+                    Icon(PhosphorIcons.Regular.Clock, contentDescription = null)
                 },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
@@ -78,7 +81,7 @@ fun TimeWindowPicker(
                 onValueChange = onTimeEndChange,
                 label = { Text("Fim") },
                 leadingIcon = {
-                    Icon(Icons.Default.Schedule, contentDescription = null)
+                    Icon(PhosphorIcons.Regular.Clock, contentDescription = null)
                 },
                 modifier = Modifier.weight(1f),
                 singleLine = true,

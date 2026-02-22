@@ -48,6 +48,12 @@ object Dimens {
     // Bottom sheet
     val BottomSheetPeekHeight = 56.dp
 
+    // Buttons
+    val ButtonHeight = 50.dp
+
+    // Form
+    val FormFieldSpacing = 16.dp
+
     // Icon sizes
     val IconSm = 16.dp
     val IconMd = 24.dp

@@ -12,14 +12,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.CloudQueue
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FiberNew
-import androidx.compose.material.icons.filled.Visibility
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +39,12 @@ import com.vigipro.core.model.CameraEventType
 import com.vigipro.core.ui.components.EmptyState
 import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.theme.Dimens
+import com.vigipro.core.ui.theme.EventCameraAdded
+import com.vigipro.core.ui.theme.EventCameraRemoved
+import com.vigipro.core.ui.theme.EventDetection
+import com.vigipro.core.ui.theme.EventOffline
+import com.vigipro.core.ui.theme.EventOnline
+import com.vigipro.core.ui.theme.EventSnapshot
 import org.orbitmvi.orbit.compose.collectAsState
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -75,7 +78,7 @@ fun EventTimelineScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(PhosphorIcons.Regular.ArrowLeft, contentDescription = "Voltar")
                     }
                 },
             )
@@ -90,7 +93,7 @@ fun EventTimelineScreen(
             }
             state.events.isEmpty() -> {
                 EmptyState(
-                    icon = Icons.Default.CloudQueue,
+                    icon = PhosphorIcons.Regular.Cloud,
                     title = "Nenhum evento",
                     subtitle = "Os eventos de status das cameras aparecerao aqui automaticamente",
                     modifier = Modifier.padding(padding),
@@ -196,33 +199,33 @@ private data class EventVisuals(
 
 private fun eventVisuals(type: CameraEventType): EventVisuals = when (type) {
     CameraEventType.WENT_OFFLINE -> EventVisuals(
-        icon = Icons.Default.CloudOff,
-        color = Color(0xFFD32F2F),
+        icon = PhosphorIcons.Regular.CloudSlash,
+        color = EventOffline,
         label = "Ficou offline",
     )
     CameraEventType.CAME_ONLINE -> EventVisuals(
-        icon = Icons.Default.CloudQueue,
-        color = Color(0xFF388E3C),
+        icon = PhosphorIcons.Regular.Cloud,
+        color = EventOnline,
         label = "Voltou online",
     )
     CameraEventType.SNAPSHOT_TAKEN -> EventVisuals(
-        icon = Icons.Default.CameraAlt,
-        color = Color(0xFF1976D2),
+        icon = PhosphorIcons.Regular.Camera,
+        color = EventSnapshot,
         label = "Snapshot capturado",
     )
     CameraEventType.CAMERA_ADDED -> EventVisuals(
-        icon = Icons.Default.FiberNew,
-        color = Color(0xFF7B1FA2),
+        icon = PhosphorIcons.Regular.Sparkle,
+        color = EventCameraAdded,
         label = "Camera adicionada",
     )
     CameraEventType.CAMERA_REMOVED -> EventVisuals(
-        icon = Icons.Default.Delete,
-        color = Color(0xFFE64A19),
+        icon = PhosphorIcons.Regular.Trash,
+        color = EventCameraRemoved,
         label = "Camera removida",
     )
     CameraEventType.OBJECT_DETECTED -> EventVisuals(
-        icon = Icons.Default.Visibility,
-        color = Color(0xFFFF5722),
+        icon = PhosphorIcons.Regular.Eye,
+        color = EventDetection,
         label = "Objeto detectado",
     )
 }

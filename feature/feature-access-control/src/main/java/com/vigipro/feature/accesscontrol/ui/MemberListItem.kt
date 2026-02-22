@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonRemove
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +53,7 @@ fun MemberListItem(
         if (canRemove && member.role != UserRole.OWNER) {
             IconButton(onClick = onRemove) {
                 Icon(
-                    Icons.Default.PersonRemove,
+                    PhosphorIcons.Regular.UserMinus,
                     contentDescription = "Remover membro",
                     tint = MaterialTheme.colorScheme.error,
                 )

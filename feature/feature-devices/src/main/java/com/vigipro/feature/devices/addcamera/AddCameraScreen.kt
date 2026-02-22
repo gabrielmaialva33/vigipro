@@ -17,20 +17,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CloudQueue
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.NetworkCheck
-import androidx.compose.material.icons.filled.Radar
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -59,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -76,10 +71,6 @@ import com.vigipro.core.ui.theme.StatusError
 import com.vigipro.core.ui.theme.StatusOnline
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
-
-val BrandGreen = Color(0xFF1D58CD)
-val FieldBorderColor = Color(0xFFB0BEC5)
-val FieldLabelColor = Color(0xFF78909C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,41 +119,54 @@ fun AddCameraScreen(
                     ) 
                 },
                 navigationIcon = {
-                    TextButton(onClick = onBack) {
-                        Text("Voltar", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Normal)
+                    TextButton(
+                        onClick = onBack,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    ) {
+                        Text("Voltar", fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     }
                 },
                 actions = {
                     TextButton(
-                        onClick = viewModel::onSave, 
-                        enabled = !state.isSaving
+                        onClick = viewModel::onSave,
+                        enabled = !state.isSaving,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
                     ) {
                         if (state.isSaving) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
                         } else {
-                            Text("Salvar", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Normal)
+                            Text("Salvar", fontSize = 16.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BrandGreen,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .imePadding()
+                .padding(horizontal = Dimens.SpacingXl)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXl))
 
             Text(
                 text = "Método de Conexão",
@@ -173,7 +177,7 @@ fun AddCameraScreen(
                 )
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             // Connection method selector (Chips)
             ConnectionMethodChips(
@@ -181,7 +185,7 @@ fun AddCameraScreen(
                 onSelect = viewModel::onConnectionMethodChange,
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXl))
 
             // Nome
             CustomTextField(
@@ -193,7 +197,7 @@ fun AddCameraScreen(
                 errorMessage = state.nameError,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             // Conditional content based on method
             when (state.connectionMethod) {
@@ -214,7 +218,7 @@ fun AddCameraScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             // Credentials section
             CredentialsSection(
@@ -224,24 +228,20 @@ fun AddCameraScreen(
                 onPasswordChange = viewModel::onPasswordChange,
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXxl))
 
             // Test connection
             Button(
                 onClick = viewModel::onTestConnection,
                 enabled = !state.isTesting && !state.isSaving && state.canTest,
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier.fillMaxWidth().height(Dimens.ButtonHeight),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandGreen,
-                    contentColor = Color.White
-                )
             ) {
                 if (state.isTesting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Testando...", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
@@ -257,7 +257,7 @@ fun AddCameraScreen(
                         text = result,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (result.startsWith("Conexao bem")) StatusOnline else StatusError,
-                        modifier = Modifier.padding(top = 12.dp).fillMaxWidth(),
+                        modifier = Modifier.padding(top = Dimens.SpacingMd).fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -265,7 +265,7 @@ fun AddCameraScreen(
 
             // Delete button (edit mode only)
             if (state.isEditMode) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXl))
                 TextButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -274,7 +274,7 @@ fun AddCameraScreen(
                     ),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
+                        imageVector = PhosphorIcons.Regular.Trash,
                         contentDescription = null,
                         modifier = Modifier.size(Dimens.IconMd),
                     )
@@ -283,7 +283,7 @@ fun AddCameraScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXxxl))
         }
     }
 }
@@ -303,13 +303,13 @@ private fun ConnectionMethodChips(
         // Mock Chips for visual parity with the image
         ChipItem(
             text = "Cloud",
-            icon = Icons.Default.CloudQueue,
+            icon = PhosphorIcons.Regular.Cloud,
             isSelected = false,
             onClick = { }
         )
         ChipItem(
             text = "Domínio",
-            icon = Icons.Default.Language,
+            icon = PhosphorIcons.Regular.Globe,
             isSelected = false,
             onClick = { }
         )
@@ -317,14 +317,14 @@ private fun ConnectionMethodChips(
         // Actual functional chips
         ChipItem(
             text = "Endereço de IP",
-            icon = Icons.Default.NetworkCheck, // Fallback if not selected
+            icon = PhosphorIcons.Regular.WifiHigh, // Fallback if not selected
             isSelected = selected == ConnectionMethod.IP_ADDRESS,
             onClick = { onSelect(ConnectionMethod.IP_ADDRESS) }
         )
         
         ChipItem(
             text = "ONVIF",
-            icon = Icons.Default.Radar,
+            icon = PhosphorIcons.Regular.Broadcast,
             isSelected = selected == ConnectionMethod.ONVIF,
             onClick = { onSelect(ConnectionMethod.ONVIF) }
         )
@@ -338,8 +338,8 @@ private fun ChipItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isSelected) BrandGreen else Color(0xFFF0F2F5)
-    val contentColor = if (isSelected) Color.White else Color(0xFF455A64)
+    val bgColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -355,7 +355,7 @@ private fun ChipItem(
         ) {
             if (isSelected) {
                 Icon(
-                    imageVector = Icons.Default.CheckCircle,
+                    imageVector = PhosphorIcons.Regular.CheckCircle,
                     contentDescription = null,
                     tint = contentColor,
                     modifier = Modifier.size(18.dp)
@@ -396,8 +396,8 @@ fun CustomTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label, color = FieldLabelColor) },
-            placeholder = { Text(placeholder, color = Color(0xFFB0BEC5)) },
+            label = { Text(label) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
             isError = isError,
             singleLine = true,
             keyboardOptions = keyboardOptions,
@@ -405,13 +405,11 @@ fun CustomTextField(
             trailingIcon = trailingIcon,
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrandGreen,
-                unfocusedBorderColor = FieldBorderColor,
-                focusedLabelColor = BrandGreen,
-                unfocusedLabelColor = FieldLabelColor,
-                cursorColor = BrandGreen,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                cursorColor = MaterialTheme.colorScheme.primary,
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -445,9 +443,9 @@ private fun IpAddressForm(
             errorMessage = state.ipAddressError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
+
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
+
         CustomTextField(
             value = state.port,
             onValueChange = onPortChange,
@@ -456,7 +454,7 @@ private fun IpAddressForm(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
         CustomTextField(
             value = state.rtspPath,
@@ -465,7 +463,7 @@ private fun IpAddressForm(
             placeholder = "/stream1",
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
         // URL Preview
         if (state.ipAddress.isNotBlank()) {
@@ -481,7 +479,7 @@ private fun UrlPreview(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color(0xFFF5F5F5),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(8.dp),
     ) {
         Text(
@@ -490,7 +488,7 @@ private fun UrlPreview(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(Dimens.SpacingMd),
         )
     }
 }
@@ -506,15 +504,14 @@ private fun OnvifDiscoverySection(
         Button(
             onClick = onStartScan,
             enabled = !state.isScanning,
-            modifier = Modifier.fillMaxWidth().height(50.dp),
+            modifier = Modifier.fillMaxWidth().height(Dimens.ButtonHeight),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
         ) {
             if (state.isScanning) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Buscando dispositivos...")
@@ -523,7 +520,7 @@ private fun OnvifDiscoverySection(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
         if (state.discoveredDevices.isEmpty() && !state.isScanning) {
             Text(
@@ -531,7 +528,7 @@ private fun OnvifDiscoverySection(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier.fillMaxWidth().padding(Dimens.SpacingLg)
             )
         }
 
@@ -540,12 +537,12 @@ private fun OnvifDiscoverySection(
                 onClick = { onSelectDevice(device) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (state.selectedDevice == device) BrandGreen.copy(alpha=0.1f) else Color(0xFFF9F9F9)
+                    containerColor = if (state.selectedDevice == device) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant
                 ),
-                border = if (state.selectedDevice == device) BorderStroke(1.dp, BrandGreen) else BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                border = if (state.selectedDevice == device) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(Dimens.SpacingLg)) {
                     Text(
                         text = device.name ?: device.address,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -558,7 +555,7 @@ private fun OnvifDiscoverySection(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
         }
     }
 }
@@ -579,7 +576,7 @@ private fun CredentialsSection(
             placeholder = "admin",
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
         var passwordVisible by remember { mutableStateOf(false) }
 
@@ -591,9 +588,9 @@ private fun CredentialsSection(
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
-                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        imageVector = if (passwordVisible) PhosphorIcons.Regular.EyeSlash else PhosphorIcons.Regular.Eye,
                         contentDescription = "Alternar Visibilidade",
-                        tint = Color.Gray
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             },

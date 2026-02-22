@@ -20,14 +20,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.ArrowLeft
-import androidx.compose.material.icons.filled.ArrowRight
-import androidx.compose.material.icons.filled.FiberManualRecord
-import androidx.compose.material.icons.filled.Remove
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -80,7 +77,7 @@ fun PtzControlPad(
             ) {
                 // Up
                 PtzDirectionButton(
-                    icon = Icons.Default.ArrowDropUp,
+                    icon = PhosphorIcons.Regular.CaretUp,
                     description = "Cima",
                     onPress = { onMove(0f, 0.5f, 0f) },
                     onRelease = onStop,
@@ -92,7 +89,7 @@ fun PtzControlPad(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     PtzDirectionButton(
-                        icon = Icons.Default.ArrowLeft,
+                        icon = PhosphorIcons.Regular.ArrowLeft,
                         description = "Esquerda",
                         onPress = { onMove(-0.5f, 0f, 0f) },
                         onRelease = onStop,
@@ -102,14 +99,14 @@ fun PtzControlPad(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            Icons.Default.FiberManualRecord,
+                            PhosphorIcons.Regular.Circle,
                             contentDescription = null,
                             tint = Color.White.copy(alpha = 0.3f),
                             modifier = Modifier.size(Dimens.IconSm),
                         )
                     }
                     PtzDirectionButton(
-                        icon = Icons.Default.ArrowRight,
+                        icon = PhosphorIcons.Regular.ArrowRight,
                         description = "Direita",
                         onPress = { onMove(0.5f, 0f, 0f) },
                         onRelease = onStop,
@@ -118,7 +115,7 @@ fun PtzControlPad(
 
                 // Down
                 PtzDirectionButton(
-                    icon = Icons.Default.ArrowDropDown,
+                    icon = PhosphorIcons.Regular.CaretDown,
                     description = "Baixo",
                     onPress = { onMove(0f, -0.5f, 0f) },
                     onRelease = onStop,
@@ -132,14 +129,14 @@ fun PtzControlPad(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
             ) {
                 PtzDirectionButton(
-                    icon = Icons.Default.Remove,
+                    icon = PhosphorIcons.Regular.Minus,
                     description = "Zoom -",
                     onPress = { onMove(0f, 0f, -0.5f) },
                     onRelease = onStop,
                     size = Dimens.PtzZoomButtonSize,
                 )
                 PtzDirectionButton(
-                    icon = Icons.Default.Add,
+                    icon = PhosphorIcons.Regular.Plus,
                     description = "Zoom +",
                     onPress = { onMove(0f, 0f, 0.5f) },
                     onRelease = onStop,

@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DoorFront
-import androidx.compose.material.icons.filled.Light
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PowerSettingsNew
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,10 +53,10 @@ private data class IconOption(
 )
 
 private val iconOptions = listOf(
-    IconOption("power", "Energia", Icons.Default.PowerSettingsNew),
-    IconOption("lock", "Tranca", Icons.Default.Lock),
-    IconOption("door", "Porta", Icons.Default.DoorFront),
-    IconOption("light", "Luz", Icons.Default.Light),
+    IconOption("power", "Energia", PhosphorIcons.Regular.Power),
+    IconOption("lock", "Tranca", PhosphorIcons.Regular.LockKey),
+    IconOption("door", "Porta", PhosphorIcons.Regular.Door),
+    IconOption("light", "Luz", PhosphorIcons.Regular.Lightbulb),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

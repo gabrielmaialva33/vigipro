@@ -25,13 +25,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DoorFront
-import androidx.compose.material.icons.filled.Light
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.Webhook
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -56,11 +54,11 @@ private val WebhookIdleColor = Color.Black.copy(alpha = 0.6f)
 private val WebhookExecutingColor = Color(0xFF1B5E20)
 
 fun webhookIcon(iconName: String): ImageVector = when (iconName) {
-    "power" -> Icons.Default.PowerSettingsNew
-    "lock" -> Icons.Default.Lock
-    "door" -> Icons.Default.DoorFront
-    "light" -> Icons.Default.Light
-    else -> Icons.Default.Webhook
+    "power" -> PhosphorIcons.Regular.Power
+    "lock" -> PhosphorIcons.Regular.LockKey
+    "door" -> PhosphorIcons.Regular.Door
+    "light" -> PhosphorIcons.Regular.Lightbulb
+    else -> PhosphorIcons.Regular.WebhooksLogo
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -170,7 +168,7 @@ fun WebhookButton(
                                     modifier = Modifier.size(32.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Delete,
+                                        imageVector = PhosphorIcons.Regular.Trash,
                                         contentDescription = "Excluir",
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(18.dp),
@@ -198,7 +196,7 @@ fun WebhookButton(
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.Webhook,
+                                imageVector = PhosphorIcons.Regular.WebhooksLogo,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                                 tint = MaterialTheme.colorScheme.primary,

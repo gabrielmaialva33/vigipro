@@ -19,6 +19,7 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("compose-ui-graphics").get())
                 add("implementation", libs.findLibrary("compose-ui-tooling-preview").get())
                 add("implementation", libs.findLibrary("compose-material3").get())
+                add("implementation", libs.findLibrary("compose-icons-phosphor").get())
                 add("debugImplementation", libs.findLibrary("compose-ui-tooling").get())
             }
         }

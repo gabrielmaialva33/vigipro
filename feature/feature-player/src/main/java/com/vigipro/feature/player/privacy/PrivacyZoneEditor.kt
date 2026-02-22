@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -179,7 +181,7 @@ fun PrivacyZoneEditor(
                 ),
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = PhosphorIcons.Regular.X,
                     contentDescription = "Remover zona",
                     modifier = Modifier.size(14.dp),
                 )
@@ -226,7 +228,7 @@ fun PrivacyZoneEditor(
                 .padding(bottom = 16.dp),
         ) {
             Icon(
-                imageVector = Icons.Default.Done,
+                imageVector = PhosphorIcons.Regular.Check,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )

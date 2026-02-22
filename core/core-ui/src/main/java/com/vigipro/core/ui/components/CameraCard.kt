@@ -1,6 +1,5 @@
 package com.vigipro.core.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -19,10 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.OpenWith
-import androidx.compose.material.icons.filled.Videocam
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.memory.MemoryCache
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.vigipro.core.ui.theme.Dimens
@@ -60,19 +62,17 @@ fun CameraCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
-    // Smooth scaling animation when card is pressed
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        label = "cardScale"
-    )
+
+    // Using graphicsLayer directly instead of animateFloatAsState to avoid
+    // a continuous recomposition loop on every animation frame (critical for low-end CPUs)
+    val pressedScale = if (isPressed) 0.96f else 1f
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                scaleX = pressedScale
+                scaleY = pressedScale
             }
             .clip(RoundedCornerShape(16.dp))
             .combinedClickable(
@@ -85,10 +85,8 @@ fun CameraCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isPressed) 0.dp else 4.dp,
-            pressedElevation = 0.dp
-        ),
+        // Fixed elevation — avoids recomposition on press on low-end devices
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column {
             Box(
@@ -98,18 +96,28 @@ fun CameraCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 if (thumbnailUrl != null) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
+                    // Cache the key to avoid rebuilding ImageRequest on every recomposition
+                    val context = LocalContext.current
+                    val imageRequest = remember(thumbnailUrl) {
+                        ImageRequest.Builder(context)
                             .data(thumbnailUrl)
-                            .crossfade(true)
-                            .build(),
+                            .crossfade(150) // shorter crossfade saves ~16ms on low-end
+                            .memoryCacheKey(thumbnailUrl)
+                            .diskCacheKey(thumbnailUrl)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .size(640, 360) // downsample: A01 screen is 720p, no need for full-res
+                            .build()
+                    }
+                    AsyncImage(
+                        model = imageRequest,
                         contentDescription = "Thumbnail for $name",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Videocam,
+                        imageVector = PhosphorIcons.Regular.VideoCamera,
                         contentDescription = null,
                         modifier = Modifier
                             .size(Dimens.IconXxl)
@@ -118,17 +126,18 @@ fun CameraCard(
                     )
                 }
 
-                // Dark gradient overlay at the bottom of the image for better text readability
+                // Cache the gradient Brush — without remember it's rebuilt on every recomposition
+                val gradientBrush = remember {
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(32.dp)
                         .align(Alignment.BottomCenter)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
-                            )
-                        )
+                        .background(brush = gradientBrush)
                 )
 
                 // Capabilities indicators on top right of the image
@@ -147,7 +156,7 @@ fun CameraCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Mic,
+                                imageVector = PhosphorIcons.Regular.Microphone,
                                 contentDescription = "Audio",
                                 modifier = Modifier.size(14.dp),
                                 tint = Color.White,
@@ -163,7 +172,7 @@ fun CameraCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.OpenWith,
+                                imageVector = PhosphorIcons.Regular.ArrowsOut,
                                 contentDescription = "PTZ",
                                 modifier = Modifier.size(14.dp),
                                 tint = Color.White,

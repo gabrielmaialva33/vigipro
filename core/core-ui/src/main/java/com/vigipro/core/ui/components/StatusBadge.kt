@@ -18,11 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.vigipro.core.ui.theme.Dimens
 import com.vigipro.core.ui.theme.StatusBadgeShape
@@ -38,15 +38,16 @@ fun StatusBadge(
     modifier: Modifier = Modifier,
     showLabel: Boolean = true,
 ) {
-    val dotColor by animateColorAsState(
-        targetValue = when (status) {
+    // Direct color lookup — animateColorAsState causes recomposition on status change.
+    // For a status indicator, instant color swap is perfectly fine and lighter.
+    val dotColor = remember(status) {
+        when (status) {
             ConnectionStatus.ONLINE -> StatusOnline
             ConnectionStatus.OFFLINE -> StatusOffline
             ConnectionStatus.ERROR -> StatusError
             ConnectionStatus.CONNECTING -> StatusOnline.copy(alpha = 0.5f)
-        },
-        label = "statusColor",
-    )
+        }
+    }
 
     val label = when (status) {
         ConnectionStatus.ONLINE -> "Online"
@@ -91,21 +92,14 @@ private fun PulsingStatusDot(
     color: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
 ) {
+    // Single animation instead of two (scale + alpha) — halves CPU cost on low-end devices.
+    // On a Galaxy A01 with 4 cameras = 4 fewer simultaneous animators.
     val infiniteTransition = rememberInfiniteTransition(label = "statusPulse")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "dotScale",
-    )
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
+        initialValue = 0.4f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(900, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "dotAlpha",
@@ -114,7 +108,6 @@ private fun PulsingStatusDot(
     Box(
         modifier = modifier
             .size(Dimens.CameraStatusDotSize)
-            .scale(scale)
             .alpha(alpha)
             .clip(CircleShape)
             .background(color),

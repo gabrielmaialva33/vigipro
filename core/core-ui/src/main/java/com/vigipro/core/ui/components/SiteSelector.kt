@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.LocationOn
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -48,7 +50,7 @@ fun SiteDropdown(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LocationOn,
+                            imageVector = PhosphorIcons.Regular.MapPin,
                             contentDescription = null,
                             modifier = Modifier.size(Dimens.IconMd),
                             tint = if (isSelected) {
@@ -76,7 +78,7 @@ fun SiteDropdown(
                         }
                         if (isSelected) {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = PhosphorIcons.Regular.Check,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(Dimens.IconMd),

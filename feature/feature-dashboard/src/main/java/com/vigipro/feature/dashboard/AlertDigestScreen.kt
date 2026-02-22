@@ -19,17 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.CloudQueue
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.FiberNew
-import androidx.compose.material.icons.filled.Summarize
-import androidx.compose.material.icons.filled.Visibility
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,6 +52,12 @@ import com.vigipro.core.model.CameraEventType
 import com.vigipro.core.ui.components.EmptyState
 import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.theme.Dimens
+import com.vigipro.core.ui.theme.EventCameraAdded
+import com.vigipro.core.ui.theme.EventCameraRemoved
+import com.vigipro.core.ui.theme.EventDetection
+import com.vigipro.core.ui.theme.EventOffline
+import com.vigipro.core.ui.theme.EventOnline
+import com.vigipro.core.ui.theme.EventSnapshot
 import org.orbitmvi.orbit.compose.collectAsState
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -90,7 +90,7 @@ fun AlertDigestScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(PhosphorIcons.Regular.ArrowLeft, contentDescription = "Voltar")
                     }
                 },
             )
@@ -105,7 +105,7 @@ fun AlertDigestScreen(
             }
             state.recentEvents.isEmpty() -> {
                 EmptyState(
-                    icon = Icons.Default.Summarize,
+                    icon = PhosphorIcons.Regular.FileText,
                     title = "Nenhum evento recente",
                     subtitle = "Os resumos de atividade das cameras aparecerao aqui quando houver eventos",
                     modifier = Modifier.padding(padding),
@@ -206,7 +206,7 @@ private fun DigestPeriodSection(
             }
             Spacer(modifier = Modifier.width(Dimens.SpacingSm))
             Icon(
-                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                imageVector = if (expanded) PhosphorIcons.Regular.CaretUp else PhosphorIcons.Regular.CaretDown,
                 contentDescription = if (expanded) "Recolher" else "Expandir",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(Dimens.IconMd),
@@ -302,39 +302,39 @@ private fun EventTypeBadges(
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXxs)) {
         if (offlineCount > 0) {
             Surface(
-                color = Color(0xFFD32F2F).copy(alpha = 0.15f),
+                color = EventOffline.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(4.dp),
             ) {
                 Text(
                     text = "$offlineCount off",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFD32F2F),
+                    color = EventOffline,
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 )
             }
         }
         if (onlineCount > 0) {
             Surface(
-                color = Color(0xFF388E3C).copy(alpha = 0.15f),
+                color = EventOnline.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(4.dp),
             ) {
                 Text(
                     text = "$onlineCount on",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF388E3C),
+                    color = EventOnline,
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 )
             }
         }
         if (detectionCount > 0) {
             Surface(
-                color = Color(0xFFFF5722).copy(alpha = 0.15f),
+                color = EventDetection.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(4.dp),
             ) {
                 Text(
                     text = "$detectionCount det",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFFF5722),
+                    color = EventDetection,
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 )
             }
@@ -384,33 +384,33 @@ private data class DigestEventVisuals(
 
 private fun digestEventVisuals(type: CameraEventType): DigestEventVisuals = when (type) {
     CameraEventType.WENT_OFFLINE -> DigestEventVisuals(
-        icon = Icons.Default.CloudOff,
-        color = Color(0xFFD32F2F),
+        icon = PhosphorIcons.Regular.CloudSlash,
+        color = EventOffline,
         label = "Ficou offline",
     )
     CameraEventType.CAME_ONLINE -> DigestEventVisuals(
-        icon = Icons.Default.CloudQueue,
-        color = Color(0xFF388E3C),
+        icon = PhosphorIcons.Regular.Cloud,
+        color = EventOnline,
         label = "Voltou online",
     )
     CameraEventType.SNAPSHOT_TAKEN -> DigestEventVisuals(
-        icon = Icons.Default.CameraAlt,
-        color = Color(0xFF1976D2),
+        icon = PhosphorIcons.Regular.Camera,
+        color = EventSnapshot,
         label = "Snapshot capturado",
     )
     CameraEventType.CAMERA_ADDED -> DigestEventVisuals(
-        icon = Icons.Default.FiberNew,
-        color = Color(0xFF7B1FA2),
+        icon = PhosphorIcons.Regular.Sparkle,
+        color = EventCameraAdded,
         label = "Camera adicionada",
     )
     CameraEventType.CAMERA_REMOVED -> DigestEventVisuals(
-        icon = Icons.Default.Delete,
-        color = Color(0xFFE64A19),
+        icon = PhosphorIcons.Regular.Trash,
+        color = EventCameraRemoved,
         label = "Camera removida",
     )
     CameraEventType.OBJECT_DETECTED -> DigestEventVisuals(
-        icon = Icons.Default.Visibility,
-        color = Color(0xFFFF5722),
+        icon = PhosphorIcons.Regular.Eye,
+        color = EventDetection,
         label = "Objeto detectado",
     )
 }

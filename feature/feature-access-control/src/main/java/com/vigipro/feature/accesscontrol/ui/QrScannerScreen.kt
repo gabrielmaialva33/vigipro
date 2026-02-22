@@ -29,9 +29,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.QrCodeScanner
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -172,7 +174,7 @@ fun RedeemInviteSection(
                 enabled = !isRedeeming,
             ) {
                 Icon(
-                    Icons.Default.QrCodeScanner,
+                    PhosphorIcons.Regular.QrCode,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                 )
@@ -210,7 +212,7 @@ fun RedeemInviteSection(
             enabled = !isRedeeming,
             leadingIcon = {
                 Icon(
-                    Icons.Default.CameraAlt,
+                    PhosphorIcons.Regular.Camera,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

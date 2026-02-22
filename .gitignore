@@ -16,3 +16,15 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
+
+# IDE / Tools
+.vscode/
+.playwright-mcp/
+
+# Build outputs
+build-logic/convention/bin/
+
+# Temp
+console_debug.txt
+fix_phosphor_icons.py
+*.png

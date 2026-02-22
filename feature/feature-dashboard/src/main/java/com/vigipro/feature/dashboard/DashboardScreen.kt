@@ -25,19 +25,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Summarize
-import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material.icons.filled.VideocamOff
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -58,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -190,7 +183,7 @@ fun DashboardScreen(
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         ) {
-                            Icon(Icons.Default.Menu, "Menu", tint = MaterialTheme.colorScheme.onSurface)
+                            Icon(PhosphorIcons.Regular.List, "Menu", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     },
                     actions = {
@@ -201,7 +194,7 @@ fun DashboardScreen(
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         ) {
-                            Icon(Icons.Default.GridView, "Multiview", tint = MaterialTheme.colorScheme.onSurface)
+                            Icon(PhosphorIcons.Regular.GridFour, "Multiview", tint = MaterialTheme.colorScheme.onSurface)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
@@ -212,7 +205,7 @@ fun DashboardScreen(
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         ) {
-                            Icon(Icons.Default.Notifications, "Notificacoes", tint = MaterialTheme.colorScheme.onSurface)
+                            Icon(PhosphorIcons.Regular.Bell, "Notificacoes", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     },
                     colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
@@ -225,13 +218,13 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = viewModel::onAddCameraClick,
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     modifier = Modifier
                         .padding(16.dp)
                         .size(64.dp),
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar camera", modifier = Modifier.size(32.dp))
+                    Icon(PhosphorIcons.Regular.Plus, contentDescription = "Adicionar camera", modifier = Modifier.size(32.dp))
                 }
             },
         ) { padding ->
@@ -244,7 +237,7 @@ fun DashboardScreen(
                 }
                 state.cameras.isEmpty() -> {
                     EmptyState(
-                        icon = Icons.Default.VideocamOff,
+                        icon = PhosphorIcons.Regular.VideoCameraSlash,
                         title = "Nenhuma Camera Detectada",
                         subtitle = "Sua central de monitoramento esta vazia. Adicione sua primeira camera IP ou ONVIF para comecar a vigiar seu espaco.",
                         actionLabel = "Adicionar Camera",
@@ -258,10 +251,17 @@ fun DashboardScreen(
                             .fillMaxSize()
                             .padding(padding),
                     ) {
-                        // Health summary banner
-                        val onlineCount = state.cameras.count { it.status == CameraStatus.ONLINE }
-                        val totalCount = state.cameras.size
-                        val allHealthy = onlineCount == totalCount && totalCount > 0
+                        // derivedStateOf: only recalculates when cameras list actually changes,
+                        // not on every recomposition triggered by other state (e.g. drawer state)
+                        val onlineCount by remember {
+                            derivedStateOf { state.cameras.count { it.status == CameraStatus.ONLINE } }
+                        }
+                        val totalCount by remember {
+                            derivedStateOf { state.cameras.size }
+                        }
+                        val allHealthy by remember {
+                            derivedStateOf { onlineCount == totalCount && totalCount > 0 }
+                        }
 
                         Row(
                             modifier = Modifier
@@ -340,7 +340,7 @@ fun DashboardScreen(
                                                 showMenu = false
                                                 viewModel.onEditCameraClick(camera.id)
                                             },
-                                            leadingIcon = { Icon(Icons.Default.Edit, null) },
+                                            leadingIcon = { Icon(PhosphorIcons.Regular.PencilSimple, null) },
                                         )
                                         DropdownMenuItem(
                                             text = { Text("Excluir") },
@@ -348,7 +348,7 @@ fun DashboardScreen(
                                                 showMenu = false
                                                 viewModel.onDeleteCameraClick(camera.id)
                                             },
-                                            leadingIcon = { Icon(Icons.Default.Delete, null) },
+                                            leadingIcon = { Icon(PhosphorIcons.Regular.Trash, null) },
                                             colors = MenuDefaults.itemColors(
                                                 textColor = MaterialTheme.colorScheme.error,
                                                 leadingIconColor = MaterialTheme.colorScheme.error,
@@ -430,22 +430,22 @@ private fun DrawerContent(
 
         // Navigation items
         DrawerNavItem(
-            icon = Icons.Default.GridView,
+            icon = PhosphorIcons.Regular.GridFour,
             label = "Multiview",
             onClick = onNavigateToMultiview,
         )
         DrawerNavItem(
-            icon = Icons.Default.VideoLibrary,
+            icon = PhosphorIcons.Regular.VideoCamera,
             label = "Gravacoes",
             onClick = onNavigateToRecordings,
         )
         DrawerNavItem(
-            icon = Icons.Default.Notifications,
+            icon = PhosphorIcons.Regular.Bell,
             label = "Timeline de Eventos",
             onClick = onNavigateToEventTimeline,
         )
         DrawerNavItem(
-            icon = Icons.Default.Summarize,
+            icon = PhosphorIcons.Regular.FileText,
             label = "Resumo de Alertas",
             onClick = onNavigateToAlertDigest,
         )
@@ -453,12 +453,12 @@ private fun DrawerContent(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         DrawerNavItem(
-            icon = Icons.Default.People,
+            icon = PhosphorIcons.Regular.Users,
             label = "Controle de Acesso",
             onClick = onNavigateToAccessControl,
         )
         DrawerNavItem(
-            icon = Icons.Default.Settings,
+            icon = PhosphorIcons.Regular.Gear,
             label = "Configuracoes",
             onClick = onNavigateToSettings,
         )

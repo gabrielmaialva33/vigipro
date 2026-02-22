@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ErrorOutline
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,7 +33,7 @@ fun ErrorState(
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            imageVector = Icons.Default.ErrorOutline,
+            imageVector = PhosphorIcons.Regular.WarningCircle,
             contentDescription = null,
             modifier = Modifier.size(Dimens.IconXl),
             tint = MaterialTheme.colorScheme.error,

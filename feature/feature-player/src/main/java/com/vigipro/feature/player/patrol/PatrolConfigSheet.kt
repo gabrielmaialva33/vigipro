@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Stop
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -204,7 +204,7 @@ fun PatrolConfigSheet(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Stop,
+                        imageVector = PhosphorIcons.Regular.Stop,
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(Dimens.SpacingSm))
@@ -226,7 +226,7 @@ fun PatrolConfigSheet(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = PhosphorIcons.Regular.Play,
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(Dimens.SpacingSm))
@@ -278,7 +278,7 @@ private fun WaypointItem(
                 modifier = Modifier.height(20.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = PhosphorIcons.Regular.Plus,
                     contentDescription = "Mover para cima",
                     modifier = Modifier.height(16.dp),
                 )
@@ -289,7 +289,7 @@ private fun WaypointItem(
                 modifier = Modifier.height(20.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Default.Remove,
+                    imageVector = PhosphorIcons.Regular.Minus,
                     contentDescription = "Mover para baixo",
                     modifier = Modifier.height(16.dp),
                 )

@@ -1,12 +1,11 @@
 package com.vigipro.core.ui.components
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.OpenWith
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Visibility
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -17,11 +16,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.vigipro.core.ui.theme.Dimens
 
 enum class PermissionType(val label: String, val icon: ImageVector) {
-    VIEW_LIVE("Ao Vivo", Icons.Default.Visibility),
-    PLAYBACK("Playback", Icons.Default.PlayCircle),
-    PTZ("PTZ", Icons.Default.OpenWith),
-    AUDIO("Audio", Icons.Default.Mic),
-    EXPORT("Export", Icons.Default.Download),
+    VIEW_LIVE("Ao Vivo", PhosphorIcons.Regular.Eye),
+    PLAYBACK("Playback", PhosphorIcons.Regular.PlayCircle),
+    PTZ("PTZ", PhosphorIcons.Regular.ArrowsOut),
+    AUDIO("Audio", PhosphorIcons.Regular.Microphone),
+    EXPORT("Export", PhosphorIcons.Regular.Download),
 }
 
 @Composable

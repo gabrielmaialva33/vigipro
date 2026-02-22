@@ -39,6 +39,14 @@ val Red40 = Color(0xFFBA1A1A)
 val Red80 = Color(0xFFFFB4AB)
 val Red90 = Color(0xFFFFDAD6)
 
+// Event type colors (AlertDigest, EventTimeline)
+val EventOffline = Color(0xFFD32F2F)
+val EventOnline = Color(0xFF388E3C)
+val EventDetection = Color(0xFFFF5722)
+val EventSnapshot = Color(0xFF1976D2)
+val EventCameraAdded = Color(0xFF7B1FA2)
+val EventCameraRemoved = Color(0xFFE64A19)
+
 // Surface/Background Tonalities for glass/depth
 val SurfaceLight = Color(0xFFF8FAFC)
 val SurfaceDark = Color(0xFF0F172A)

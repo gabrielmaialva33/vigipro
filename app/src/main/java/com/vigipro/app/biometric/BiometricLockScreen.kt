@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Lock
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.*
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +43,7 @@ fun BiometricLockScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingLg),
         ) {
             Icon(
-                imageVector = Icons.Default.Lock,
+                imageVector = PhosphorIcons.Regular.Lock,
                 contentDescription = null,
                 modifier = Modifier.size(Dimens.IconXxl),
                 tint = MaterialTheme.colorScheme.primary,
@@ -64,7 +66,7 @@ fun BiometricLockScreen(
                 contentPadding = PaddingValues(horizontal = 32.dp, vertical = 12.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Default.Fingerprint,
+                    imageVector = PhosphorIcons.Regular.Fingerprint,
                     contentDescription = null,
                     modifier = Modifier.size(Dimens.IconMd),
                 )
