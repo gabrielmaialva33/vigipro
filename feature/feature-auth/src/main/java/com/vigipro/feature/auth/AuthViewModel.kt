@@ -99,14 +99,26 @@ class AuthViewModel @Inject constructor(
         }
 
         result.onFailure { error ->
+            val msg = error.message.orEmpty()
             val message = when {
-                error.message?.contains("Invalid login", ignoreCase = true) == true ->
+                msg.contains("Invalid login", ignoreCase = true) ->
                     "Email ou senha incorretos"
-                error.message?.contains("already registered", ignoreCase = true) == true ->
+                msg.contains("already registered", ignoreCase = true) ->
                     "Este email ja esta cadastrado"
-                error.message?.contains("Email not confirmed", ignoreCase = true) == true ->
+                msg.contains("Email not confirmed", ignoreCase = true) ->
                     "Confirme seu email antes de entrar"
-                else -> error.message ?: "Erro de autenticacao"
+                msg.contains("rate_limit", ignoreCase = true) ->
+                    "Muitas tentativas. Aguarde alguns segundos"
+                msg.contains("network", ignoreCase = true) ||
+                    msg.contains("timeout", ignoreCase = true) ||
+                    msg.contains("Unable to resolve", ignoreCase = true) ->
+                    "Sem conexao com o servidor. Verifique sua internet"
+                msg.contains("weak_password", ignoreCase = true) ->
+                    "Senha muito fraca. Use letras, numeros e simbolos"
+                msg.contains("invalid_email", ignoreCase = true) ||
+                    msg.contains("invalid email", ignoreCase = true) ->
+                    "Email invalido"
+                else -> "Erro de autenticacao. Tente novamente"
             }
             reduce { state.copy(isLoading = false, errorMessage = message) }
         }

@@ -156,7 +156,7 @@ class AddCameraViewModel @Inject constructor(
             reduce { state.copy(isScanning = false, discoveredDevices = devices) }
         } catch (e: Exception) {
             reduce { state.copy(isScanning = false) }
-            postSideEffect(AddCameraSideEffect.ShowError("Erro na busca: ${e.message}"))
+            postSideEffect(AddCameraSideEffect.ShowError("Erro na busca de dispositivos. Verifique o endereco"))
         }
     }
 
@@ -256,7 +256,7 @@ class AddCameraViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             reduce { state.copy(isSaving = false) }
-            postSideEffect(AddCameraSideEffect.ShowError("Erro ao salvar: ${e.message}"))
+            postSideEffect(AddCameraSideEffect.ShowError("Erro ao salvar camera. Tente novamente"))
         }
     }
 
@@ -266,7 +266,7 @@ class AddCameraViewModel @Inject constructor(
             cameraRepository.deleteCamera(id)
             postSideEffect(AddCameraSideEffect.CameraDeleted)
         } catch (e: Exception) {
-            postSideEffect(AddCameraSideEffect.ShowError("Erro ao excluir: ${e.message}"))
+            postSideEffect(AddCameraSideEffect.ShowError("Erro ao excluir camera. Tente novamente"))
         }
     }
 

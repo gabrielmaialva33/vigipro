@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "79c3f3e5b93935969c3854dd774ff52f",
+    "identityHash": "0499d0b1d794aae624b56a323a9e0d49",
     "entities": [
       {
         "tableName": "cameras",
@@ -414,12 +414,23 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_privacy_zones_camera_id",
+            "unique": false,
+            "columnNames": [
+              "camera_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_privacy_zones_camera_id` ON `${TABLE_NAME}` (`camera_id`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79c3f3e5b93935969c3854dd774ff52f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0499d0b1d794aae624b56a323a9e0d49')"
     ]
   }
 }

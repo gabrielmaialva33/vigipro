@@ -145,7 +145,7 @@ class AccessControlViewModel @Inject constructor(
             postSideEffect(AccessControlSideEffect.ShowSnackbar("Convite criado"))
         }.onFailure { error ->
             postSideEffect(
-                AccessControlSideEffect.ShowSnackbar(error.message ?: "Erro ao criar convite"),
+                AccessControlSideEffect.ShowSnackbar("Erro ao criar convite. Tente novamente"),
             )
         }
     }
@@ -193,7 +193,7 @@ class AccessControlViewModel @Inject constructor(
             .onFailure { error ->
                 reduce { state.copy(isRedeeming = false) }
                 postSideEffect(
-                    AccessControlSideEffect.ShowSnackbar(error.message ?: "Erro ao resgatar convite"),
+                    AccessControlSideEffect.ShowSnackbar("Erro ao resgatar convite. Verifique o codigo"),
                 )
             }
     }

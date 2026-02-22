@@ -118,7 +118,7 @@ abstract class VigiProDatabase : RoomDatabase() {
                     CREATE TABLE IF NOT EXISTS privacy_zones (
                         id TEXT NOT NULL PRIMARY KEY,
                         camera_id TEXT NOT NULL,
-                        label TEXT NOT NULL DEFAULT '',
+                        label TEXT NOT NULL,
                         left REAL NOT NULL,
                         top REAL NOT NULL,
                         right REAL NOT NULL,
