@@ -3,7 +3,6 @@ package com.vigipro.core.data.repository
 import com.vigipro.core.model.Invitation
 import com.vigipro.core.model.UserRole
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.SerialName
@@ -35,6 +34,7 @@ private data class CreateInvitationRequest(
 @Singleton
 class SupabaseInvitationRepository @Inject constructor(
     private val supabase: SupabaseClient,
+    private val authRepository: AuthRepository,
 ) : InvitationRepository {
 
     override suspend fun getInvitationsForSite(siteId: String): Result<List<Invitation>> =
@@ -56,7 +56,7 @@ class SupabaseInvitationRepository @Inject constructor(
         maxUses: Int,
         expiresInHours: Int,
     ): Result<Invitation> = runCatching {
-        val userId = supabase.auth.currentUserOrNull()?.id
+        val userId = authRepository.currentUserId
             ?: error("Usuario nao autenticado")
 
         val code = generateInviteCode()

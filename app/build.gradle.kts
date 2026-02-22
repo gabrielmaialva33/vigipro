@@ -5,6 +5,9 @@ plugins {
     id("vigipro.android.compose")
     id("vigipro.android.hilt")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics.plugin)
+    alias(libs.plugins.firebase.perf.plugin)
 }
 
 // Load keystore properties from local.properties or keystore.properties
@@ -69,8 +72,8 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)
 
-    // Compose icons
-    implementation(libs.compose.material.icons.extended)
+    // Compose icons — Phosphor is now handled by the convention plugin (AndroidComposeConventionPlugin)
+    // compose.material.icons.extended was removed: ~10MB unused after Phosphor migration
 
     // Biometric
     implementation(libs.androidx.biometric)
@@ -85,6 +88,16 @@ dependencies {
 
     // Logging
     implementation(libs.timber)
+
+    // Firebase (BoM manages versions)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.perf)
+    implementation(libs.firebase.config)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.inappmessaging.display)
 
     // Testing
     testImplementation(libs.junit)

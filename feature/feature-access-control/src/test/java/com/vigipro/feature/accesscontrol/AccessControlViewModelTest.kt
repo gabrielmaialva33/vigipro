@@ -83,6 +83,8 @@ private class FakeAuthRepository : AuthRepository {
     override val currentUserEmail: String? = "u@e.com"
     override suspend fun signIn(email: String, password: String) = Result.success(Unit)
     override suspend fun signUp(email: String, password: String) = Result.success(Unit)
+    override suspend fun signInWithGoogle(idToken: String) = Result.success(Unit)
+    override suspend fun sendPasswordResetEmail(email: String) = Result.success(Unit)
     override suspend fun signOut() {}
 }
 
@@ -281,7 +283,7 @@ class AccessControlViewModelTest {
         vm.test(this, initialState = loadedState) {
             expectInitialState()
             containerHost.onCreateInvite()
-            expectSideEffect(AccessControlSideEffect.ShowSnackbar("Falha de rede"))
+            expectSideEffect(AccessControlSideEffect.ShowSnackbar("Erro ao criar convite. Tente novamente"))
         }
     }
 
@@ -398,7 +400,7 @@ class AccessControlViewModelTest {
             expectState { copy(isRedeeming = true) }
             expectState { copy(isRedeeming = false) }
             expectSideEffect(
-                AccessControlSideEffect.ShowSnackbar("Convite nao encontrado"),
+                AccessControlSideEffect.ShowSnackbar("Erro ao resgatar convite. Verifique o codigo"),
             )
         }
     }

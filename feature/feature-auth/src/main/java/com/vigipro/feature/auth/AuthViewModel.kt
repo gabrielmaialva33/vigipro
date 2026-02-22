@@ -17,6 +17,9 @@ data class AuthState(
     val email: String = "",
     val password: String = "",
     val errorMessage: String? = null,
+    val isGoogleLoading: Boolean = false,
+    val showForgotPassword: Boolean = false,
+    val forgotPasswordEmail: String = "",
 )
 
 sealed interface AuthSideEffect {
@@ -101,28 +104,81 @@ class AuthViewModel @Inject constructor(
         result.onFailure { error ->
             val msg = error.message.orEmpty()
             val message = when {
-                msg.contains("Invalid login", ignoreCase = true) ->
+                // Firebase error codes
+                msg.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) ||
+                    msg.contains("INVALID_EMAIL", ignoreCase = true) ||
+                    msg.contains("Invalid login", ignoreCase = true) ->
                     "Email ou senha incorretos"
-                msg.contains("already registered", ignoreCase = true) ->
+                msg.contains("EMAIL_EXISTS", ignoreCase = true) ||
+                    msg.contains("already in use", ignoreCase = true) ||
+                    msg.contains("already registered", ignoreCase = true) ->
                     "Este email ja esta cadastrado"
-                msg.contains("Email not confirmed", ignoreCase = true) ->
-                    "Confirme seu email antes de entrar"
-                msg.contains("rate_limit", ignoreCase = true) ->
+                msg.contains("USER_NOT_FOUND", ignoreCase = true) ||
+                    msg.contains("no user record", ignoreCase = true) ->
+                    "Email nao cadastrado"
+                msg.contains("WEAK_PASSWORD", ignoreCase = true) ||
+                    msg.contains("weak_password", ignoreCase = true) ->
+                    "Senha muito fraca. Use no minimo 6 caracteres"
+                msg.contains("TOO_MANY_ATTEMPTS", ignoreCase = true) ||
+                    msg.contains("rate_limit", ignoreCase = true) ->
                     "Muitas tentativas. Aguarde alguns segundos"
+                msg.contains("badly formatted", ignoreCase = true) ||
+                    msg.contains("invalid_email", ignoreCase = true) ->
+                    "Email invalido"
                 msg.contains("network", ignoreCase = true) ||
                     msg.contains("timeout", ignoreCase = true) ||
                     msg.contains("Unable to resolve", ignoreCase = true) ->
                     "Sem conexao com o servidor. Verifique sua internet"
-                msg.contains("weak_password", ignoreCase = true) ->
-                    "Senha muito fraca. Use letras, numeros e simbolos"
-                msg.contains("invalid_email", ignoreCase = true) ||
-                    msg.contains("invalid email", ignoreCase = true) ->
-                    "Email invalido"
                 else -> "Erro de autenticacao. Tente novamente"
             }
             reduce { state.copy(isLoading = false, errorMessage = message) }
         }
 
         // Success handled by sessionState observer
+    }
+
+    fun onGoogleSignIn(idToken: String) = intent {
+        reduce { state.copy(isGoogleLoading = true, errorMessage = null) }
+
+        authRepository.signInWithGoogle(idToken).onFailure { error ->
+            val message = when {
+                error.message.orEmpty().contains("network", ignoreCase = true) ->
+                    "Sem conexao. Verifique sua internet"
+                else -> "Erro ao entrar com Google. Tente novamente"
+            }
+            reduce { state.copy(isGoogleLoading = false, errorMessage = message) }
+        }
+        // Success handled by sessionState observer
+    }
+
+    fun onShowForgotPassword() = intent {
+        reduce { state.copy(showForgotPassword = true, forgotPasswordEmail = state.email) }
+    }
+
+    fun onDismissForgotPassword() = intent {
+        reduce { state.copy(showForgotPassword = false) }
+    }
+
+    fun onForgotPasswordEmailChange(email: String) = intent {
+        reduce { state.copy(forgotPasswordEmail = email) }
+    }
+
+    fun onSendPasswordReset() = intent {
+        val email = state.forgotPasswordEmail.trim()
+        if (email.isBlank()) {
+            reduce { state.copy(errorMessage = "Informe seu email") }
+            return@intent
+        }
+
+        reduce { state.copy(isLoading = true) }
+
+        authRepository.sendPasswordResetEmail(email)
+            .onSuccess {
+                reduce { state.copy(isLoading = false, showForgotPassword = false) }
+                postSideEffect(AuthSideEffect.ShowSnackbar("Email de recuperacao enviado para $email"))
+            }
+            .onFailure {
+                reduce { state.copy(isLoading = false, errorMessage = "Erro ao enviar email de recuperacao") }
+            }
     }
 }

@@ -1,4 +1,5 @@
 [versions]
+compose-icons = "1.0.0"
 agp = "8.8.2"
 kotlin = "2.1.10"
 ksp = "2.1.10-1.0.31"
@@ -26,6 +27,15 @@ ktor = "3.1.1"
 # Supabase
 supabase = "3.1.2"
 
+# Firebase
+firebaseBom = "34.9.0"
+googleServices = "4.4.4"
+firebaseCrashlyticsPlugin = "3.0.3"
+firebasePerfPlugin = "1.4.2"
+credentials = "1.3.0"
+googleid = "1.1.1"
+coroutines-play-services = "1.10.1"
+
 # ONVIF
 onvif = "1.8.3"
 
@@ -39,8 +49,10 @@ coil = "3.1.0"
 zxing = "3.5.3"
 barcode-scanning = "17.3.0"
 
-# ML Kit Object Detection
+# ML Kit
 mlkit-object-detection = "17.0.2"
+mlkit-text-recognition = "16.0.1"
+mlkit-image-labeling = "17.0.9"
 
 # CameraX
 camerax = "1.4.1"
@@ -70,6 +82,7 @@ coroutines-test = "1.10.1"
 orbit-test = "9.0.0"
 
 [libraries]
+compose-icons-phosphor = { module = "com.adamglin:phosphor-icon", version.ref = "compose-icons" }
 # AndroidX Core
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
@@ -123,6 +136,23 @@ supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", v
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }
 supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabase" }
 
+# Firebase
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-perf = { module = "com.google.firebase:firebase-perf" }
+firebase-config = { module = "com.google.firebase:firebase-config" }
+firebase-appcheck-playintegrity = { module = "com.google.firebase:firebase-appcheck-playintegrity" }
+firebase-inappmessaging-display = { module = "com.google.firebase:firebase-inappmessaging-display" }
+
+# Credentials (Google Sign-In via Credential Manager)
+credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines-play-services" }
+
 # ONVIF
 onvif-camera = { module = "com.seanproctor:onvifcamera", version.ref = "onvif" }
 
@@ -139,6 +169,8 @@ coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.re
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcode-scanning" }
 mlkit-od-custom = { module = "com.google.mlkit:object-detection-custom", version.ref = "mlkit-object-detection" }
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit-text-recognition" }
+mlkit-image-labeling = { module = "com.google.mlkit:image-labeling", version.ref = "mlkit-image-labeling" }
 
 # CameraX
 camerax-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
@@ -187,3 +219,6 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics-plugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
+firebase-perf-plugin = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerfPlugin" }

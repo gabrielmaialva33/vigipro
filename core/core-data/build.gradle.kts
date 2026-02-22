@@ -32,6 +32,20 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.config)
+    implementation(libs.coroutines.play.services)
+
+    // Logging
+    implementation(libs.timber)
+
+    // Credentials (Google Sign-In)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services)
+    implementation(libs.googleid)
+
     // Biometric
     implementation(libs.androidx.biometric)
 
@@ -40,8 +54,10 @@ dependencies {
     implementation(libs.media3.exoplayer.rtsp)
     implementation(libs.media3.common)
 
-    // ML Kit Object Detection
+    // ML Kit (on-device)
     implementation(libs.mlkit.od.custom)
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.image.labeling)
 
     // Location (Geofencing)
     implementation(libs.play.services.location)

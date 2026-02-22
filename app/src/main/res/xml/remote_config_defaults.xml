@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <!-- Feature flags -->
+    <entry>
+        <key>feature_multiview_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_ptz_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_talkback_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_patrol_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_privacy_zones_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_webhooks_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>feature_geofence_enabled</key>
+        <value>true</value>
+    </entry>
+
+    <!-- Limites e configuracoes -->
+    <entry>
+        <key>max_cameras_per_site</key>
+        <value>50</value>
+    </entry>
+    <entry>
+        <key>max_sites_per_user</key>
+        <value>10</value>
+    </entry>
+    <entry>
+        <key>camera_reconnect_interval_seconds</key>
+        <value>30</value>
+    </entry>
+    <entry>
+        <key>multiview_max_cameras</key>
+        <value>4</value>
+    </entry>
+
+    <!-- Mensagens de manutencao -->
+    <entry>
+        <key>maintenance_mode</key>
+        <value>false</value>
+    </entry>
+    <entry>
+        <key>maintenance_message</key>
+        <value></value>
+    </entry>
+
+    <!-- Versao minima do app -->
+    <entry>
+        <key>min_app_version</key>
+        <value>1</value>
+    </entry>
+    <entry>
+        <key>force_update_message</key>
+        <value>Uma nova versao do VigiPro esta disponivel. Atualize para continuar usando o app.</value>
+    </entry>
+</defaultsMap>

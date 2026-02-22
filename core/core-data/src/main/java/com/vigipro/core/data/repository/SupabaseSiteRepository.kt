@@ -5,7 +5,6 @@ import com.vigipro.core.data.db.SiteEntity
 import com.vigipro.core.model.Site
 import com.vigipro.core.model.SiteMember
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,6 +24,7 @@ private data class CreateSiteRequest(
 class SupabaseSiteRepository @Inject constructor(
     private val supabase: SupabaseClient,
     private val siteDao: SiteDao,
+    private val authRepository: AuthRepository,
 ) : SiteRepository {
 
     override fun getUserSites(): Flow<List<Site>> =
@@ -34,7 +34,7 @@ class SupabaseSiteRepository @Inject constructor(
 
     override suspend fun createSite(name: String, address: String?): Result<Site> =
         runCatching {
-            val userId = supabase.auth.currentUserOrNull()?.id
+            val userId = authRepository.currentUserId
                 ?: error("Usuario nao autenticado")
 
             val site = supabase.from("sites")

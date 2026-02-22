@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "444500286209",
+    "project_id": "vigipro-d40dc",
+    "storage_bucket": "vigipro-d40dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444500286209:android:636f21ef0ab10b5637d900",
+        "android_client_info": {
+          "package_name": "com.vigipro.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "444500286209-139d9lo615pmrram5dhia7h8v3uianbp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vigipro.app",
+            "certificate_hash": "d8450b4043fecbc39bb67f8cb5a0b176d34a99ae"
+          }
+        },
+        {
+          "client_id": "444500286209-dmtl2vh2161shh1phf2q1e57pk8gql3m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjcZaZqSHq9cwyIzvzNPhJ9oJbYqoaawk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "444500286209-dmtl2vh2161shh1phf2q1e57pk8gql3m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

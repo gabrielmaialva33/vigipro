@@ -128,6 +128,14 @@ class FakeAuthRepository : AuthRepository {
         if (shouldFailAuth) Result.failure(RuntimeException("User already registered"))
         else Result.success(Unit)
 
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> =
+        if (shouldFailAuth) Result.failure(RuntimeException("Google sign-in failed"))
+        else Result.success(Unit)
+
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
+        if (shouldFailAuth) Result.failure(RuntimeException("Password reset failed"))
+        else Result.success(Unit)
+
     override suspend fun signOut() {
         _currentUserId = null
         _currentUserEmail = null

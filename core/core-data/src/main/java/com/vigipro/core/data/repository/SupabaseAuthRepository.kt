@@ -49,6 +49,12 @@ class SupabaseAuthRepository @Inject constructor(
             }
         }
 
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> =
+        Result.failure(UnsupportedOperationException("Use FirebaseAuthRepository"))
+
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
+        Result.failure(UnsupportedOperationException("Use FirebaseAuthRepository"))
+
     override suspend fun signOut() {
         try {
             supabase.auth.signOut()

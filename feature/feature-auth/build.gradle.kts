@@ -10,6 +10,14 @@ android {
 dependencies {
     implementation(project(":core:core-network"))
 
+    // Google Sign-In (Credential Manager)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services)
+    implementation(libs.googleid)
+
+    // Logging
+    implementation(libs.timber)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

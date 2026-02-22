@@ -4,6 +4,13 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.remoteConfigSettings
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import java.io.File
@@ -27,11 +34,28 @@ class VigiProApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        // Firebase init
+        FirebaseApp.initializeApp(this)
+
+        // App Check — protege APIs contra acesso nao autorizado
+        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
+            PlayIntegrityAppCheckProviderFactory.getInstance(),
+        )
+
+        // Crashlytics — desabilita em debug pra nao poluir o dashboard
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(!BuildConfig.DEBUG)
+
+        // Analytics — desabilita em debug
+        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(!BuildConfig.DEBUG)
+
+        // Remote Config — defaults + fetch interval
+        setupRemoteConfig()
+
         // Timber logging
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         } else {
-            Timber.plant(CrashReportingTree())
+            Timber.plant(CrashlyticsCrashReportingTree())
         }
 
         // Crash handler — salva stack trace em arquivo pra debug
@@ -70,11 +94,31 @@ class VigiProApp : Application(), Configuration.Provider {
         Timber.e(throwable, "App crashed")
     }
 
-    /** Tree pra release: loga apenas WARN+ e suprime verbose/debug */
-    private class CrashReportingTree : Timber.Tree() {
+    private fun setupRemoteConfig() {
+        val remoteConfig = FirebaseRemoteConfig.getInstance()
+        val configSettings = remoteConfigSettings {
+            minimumFetchIntervalInSeconds = if (BuildConfig.DEBUG) 0 else 3600
+        }
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Timber.d("Remote Config: valores atualizados")
+            }
+        }
+    }
+
+    /** Tree pra release: loga WARN+ e envia pra Crashlytics */
+    private class CrashlyticsCrashReportingTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
             if (priority < Log.WARN) return
-            Log.println(priority, tag ?: "VigiPro", message)
+
+            val crashlytics = FirebaseCrashlytics.getInstance()
+            crashlytics.log("${tag ?: "VigiPro"}: $message")
+
+            if (t != null) {
+                crashlytics.recordException(t)
+            }
         }
     }
 }
