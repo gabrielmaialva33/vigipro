@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
@@ -39,8 +40,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.memory.MemoryCache
 import coil3.request.CachePolicy
@@ -59,6 +62,8 @@ fun CameraCard(
     onLongClick: () -> Unit = {},
     ptzCapable: Boolean = false,
     audioCapable: Boolean = false,
+    isDemo: Boolean = false,
+    isLive: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -139,6 +144,55 @@ fun CameraCard(
                         .align(Alignment.BottomCenter)
                         .background(brush = gradientBrush)
                 )
+
+                // Demo / Live badges on top left
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(Dimens.SpacingSm),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs),
+                ) {
+                    if (isDemo) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFF6366F1).copy(alpha = 0.9f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = "DEMO",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 9.sp,
+                            )
+                        }
+                    }
+                    if (isLive) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFFEF4444).copy(alpha = 0.9f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White),
+                            )
+                            Text(
+                                text = "AO VIVO",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 9.sp,
+                            )
+                        }
+                    }
+                }
 
                 // Capabilities indicators on top right of the image
                 Row(

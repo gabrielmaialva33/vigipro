@@ -22,19 +22,19 @@ class CameraNotificationHelper @Inject constructor(
     private fun createChannels() {
         val alertChannel = NotificationChannel(
             CHANNEL_CAMERA_ALERTS,
-            "Alertas de Camera",
+            "Alertas de Câmera",
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Notificacoes quando cameras ficam offline ou retornam"
+            description = "Notificações quando câmeras ficam offline ou retornam"
         }
         notificationManager.createNotificationChannel(alertChannel)
 
         val detectionChannel = NotificationChannel(
             CHANNEL_DETECTION_ALERTS,
-            "Alertas de Deteccao",
+            "Alertas de Detecção",
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Notificacoes quando objetos sao detectados pela IA"
+            description = "Notificações quando objetos são detectados pela IA"
         }
         notificationManager.createNotificationChannel(detectionChannel)
 
@@ -43,7 +43,7 @@ class CameraNotificationHelper @Inject constructor(
             "Status do Sistema",
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
-            description = "Notificacoes de status como geofencing e automacoes"
+            description = "Notificações de status como geofencing e automações"
         }
         notificationManager.createNotificationChannel(statusChannel)
 
@@ -52,7 +52,7 @@ class CameraNotificationHelper @Inject constructor(
             "Resumo de Alertas",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "Resumos periodicos de atividade das cameras"
+            description = "Resumos periódicos de atividade das câmeras"
         }
         notificationManager.createNotificationChannel(digestChannel)
     }
@@ -61,7 +61,7 @@ class CameraNotificationHelper @Inject constructor(
         val notification = NotificationCompat.Builder(context, CHANNEL_CAMERA_ALERTS)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("Camera Offline")
-            .setContentText("$cameraName perdeu conexao")
+            .setContentText("$cameraName perdeu conexão")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()

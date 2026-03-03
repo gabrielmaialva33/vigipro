@@ -3,9 +3,13 @@ package com.vigipro.core.data.repository
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraEvent
 import com.vigipro.core.model.CameraStatus
+import com.vigipro.core.network.cloud.CategoriesResponse
 import com.vigipro.core.network.cloud.CloudCameraDto
 import com.vigipro.core.network.cloud.CloudEventDto
 import com.vigipro.core.network.cloud.CloudHealthResponse
+import com.vigipro.core.network.cloud.DemoCameraDto
+import com.vigipro.core.network.cloud.PaginationMeta
+import com.vigipro.core.network.cloud.PublicCameraDto
 import com.vigipro.core.network.cloud.VigiProCloudApi
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,6 +47,24 @@ class VigiProCloudRepository @Inject constructor(
         val response = api.listCameras()
         response.cameras.map { it.toDomain() }
     }
+
+    override suspend fun fetchDemoCameras(): Result<List<Camera>> = runCatching {
+        val response = api.getDemoCameras()
+        response.cameras.map { it.toDomain() }
+    }
+
+    override suspend fun fetchPublicCameras(
+        category: String?,
+        page: Int,
+        pageSize: Int,
+    ): Result<Pair<List<Camera>, PaginationMeta>> = runCatching {
+        val response = api.getPublicCameras(category, page, pageSize)
+        response.cameras.map { it.toDomain() } to response.meta
+    }
+
+    override suspend fun fetchPublicCategories(): Result<CategoriesResponse> = runCatching {
+        api.getPublicCategories()
+    }
 }
 
 // --- Mappers ---
@@ -76,6 +98,31 @@ private fun CloudCameraDto.toDomain() = Camera(
     sortOrder = sortOrder,
     onvifAddress = onvifAddress,
     streamProfile = streamProfile,
+)
+
+private fun DemoCameraDto.toDomain() = Camera(
+    id = id,
+    siteId = "demo",
+    name = name,
+    hlsUrl = hlsUrl,
+    status = when (status) {
+        "streaming" -> CameraStatus.ONLINE
+        else -> CameraStatus.OFFLINE
+    },
+    isDemo = true,
+)
+
+private fun PublicCameraDto.toDomain() = Camera(
+    id = id,
+    siteId = "public",
+    name = name,
+    hlsUrl = hlsUrl,
+    thumbnailUrl = thumbnailUrl,
+    status = when (status) {
+        "online", "streaming" -> CameraStatus.ONLINE
+        else -> CameraStatus.OFFLINE
+    },
+    isDemo = true,
 )
 
 private fun CameraEvent.toCloudDto() = CloudEventDto(

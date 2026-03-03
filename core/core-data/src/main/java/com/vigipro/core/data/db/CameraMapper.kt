@@ -17,6 +17,8 @@ fun CameraEntity.toDomain(): Camera = Camera(
         ?: CameraStatus.OFFLINE,
     thumbnailUrl = thumbnailUrl,
     sortOrder = sortOrder,
+    hlsUrl = hlsUrl,
+    isDemo = isDemo,
 )
 
 fun Camera.toEntity(): CameraEntity = CameraEntity(
@@ -32,4 +34,6 @@ fun Camera.toEntity(): CameraEntity = CameraEntity(
     status = status.name.lowercase(),
     thumbnailUrl = thumbnailUrl,
     sortOrder = sortOrder,
+    hlsUrl = hlsUrl,
+    isDemo = isDemo,
 )

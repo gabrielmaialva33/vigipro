@@ -48,6 +48,30 @@ class VigiProCloudApi(
         return client.get("$url/api/health").body()
     }
 
+    // --- Demo cameras (public, no auth) ---
+
+    suspend fun getDemoCameras(): DemoCamerasResponse {
+        return client.get("$url/api/demo/cameras").body()
+    }
+
+    // --- Public cameras (curated catalog, no auth) ---
+
+    suspend fun getPublicCameras(
+        category: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20,
+    ): PublicCamerasResponse {
+        return client.get("$url/api/public/cameras") {
+            category?.let { parameter("category", it) }
+            parameter("page", page)
+            parameter("page_size", pageSize)
+        }.body()
+    }
+
+    suspend fun getPublicCategories(): CategoriesResponse {
+        return client.get("$url/api/public/categories").body()
+    }
+
     // --- Cameras ---
 
     suspend fun listCameras(siteId: String? = null): CloudCamerasResponse {

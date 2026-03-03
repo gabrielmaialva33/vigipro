@@ -34,11 +34,12 @@ private data class CreateInvitationRequest(
 @Singleton
 class SupabaseInvitationRepository @Inject constructor(
     private val supabase: SupabaseClient,
-    private val authRepository: AuthRepository,
+    private val sessionHelper: SupabaseSessionHelper,
 ) : InvitationRepository {
 
     override suspend fun getInvitationsForSite(siteId: String): Result<List<Invitation>> =
         runCatching {
+            sessionHelper.requireUserId() // Ensure session for RLS
             supabase.from("invitations")
                 .select {
                     filter { eq("site_id", siteId) }
@@ -56,8 +57,7 @@ class SupabaseInvitationRepository @Inject constructor(
         maxUses: Int,
         expiresInHours: Int,
     ): Result<Invitation> = runCatching {
-        val userId = authRepository.currentUserId
-            ?: error("Usuario nao autenticado")
+        val userId = sessionHelper.requireUserId()
 
         val code = generateInviteCode()
         val expiresAt = Instant.now()
@@ -93,6 +93,7 @@ class SupabaseInvitationRepository @Inject constructor(
 
     override suspend fun deleteInvitation(invitationId: String): Result<Unit> =
         runCatching {
+            sessionHelper.requireUserId() // Ensure session for RLS
             supabase.from("invitations").delete {
                 filter { eq("id", invitationId) }
             }
@@ -100,6 +101,7 @@ class SupabaseInvitationRepository @Inject constructor(
 
     override suspend fun redeemInvitation(code: String): Result<String> =
         runCatching {
+            sessionHelper.requireUserId() // Ensure session for RPC auth.uid()
             val json = supabase.postgrest.rpc(
                 "redeem_invitation",
                 buildJsonObject { put("p_code", code) },
@@ -108,7 +110,8 @@ class SupabaseInvitationRepository @Inject constructor(
             val status = json["status"]?.jsonPrimitive?.content ?: "error"
 
             when (status) {
-                "success" -> json["site_id"]?.jsonPrimitive?.content ?: ""
+                "success" -> json["site_id"]?.jsonPrimitive?.content
+                    ?: throw IllegalStateException("Resposta invalida do servidor")
                 "already_member" -> throw IllegalStateException("Voce ja e membro deste site")
                 else -> throw IllegalStateException("Erro ao resgatar convite")
             }

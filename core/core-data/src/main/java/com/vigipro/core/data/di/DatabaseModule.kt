@@ -34,6 +34,7 @@ object DatabaseModule {
                 VigiProDatabase.MIGRATION_3_4,
                 VigiProDatabase.MIGRATION_4_5,
                 VigiProDatabase.MIGRATION_5_6,
+                VigiProDatabase.MIGRATION_6_7,
             )
             .build()
     }

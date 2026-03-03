@@ -32,7 +32,7 @@ class TextRecognitionEngine @Inject constructor() {
         val width = bitmap.width.toFloat()
         val height = bitmap.height.toFloat()
 
-        val result = suspendCancellableCoroutine { cont ->
+        val result = suspendCancellableCoroutine<com.google.mlkit.vision.text.Text?> { cont ->
             recognizer.process(inputImage)
                 .addOnSuccessListener { visionText -> cont.resume(visionText) }
                 .addOnFailureListener { cont.resume(null) }
@@ -52,7 +52,7 @@ class TextRecognitionEngine @Inject constructor() {
                             it.bottom / height,
                         )
                     },
-                    language = line.recognizedLanguage.takeIf { it.isNotEmpty() },
+                    language = line.recognizedLanguage.takeIf { lang: String -> lang.isNotEmpty() },
                 )
             }
         }

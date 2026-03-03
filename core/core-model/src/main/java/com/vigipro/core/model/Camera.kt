@@ -3,6 +3,9 @@ package com.vigipro.core.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Sentinel siteId for cameras saved locally without login. */
+const val LOCAL_SITE_ID = "local"
+
 @Serializable
 data class Camera(
     val id: String,
@@ -17,6 +20,8 @@ data class Camera(
     val status: CameraStatus = CameraStatus.OFFLINE,
     @SerialName("thumbnail_url") val thumbnailUrl: String? = null,
     @SerialName("sort_order") val sortOrder: Int = 0,
+    @SerialName("hls_url") val hlsUrl: String? = null,
+    @SerialName("is_demo") val isDemo: Boolean = false,
 )
 
 @Serializable

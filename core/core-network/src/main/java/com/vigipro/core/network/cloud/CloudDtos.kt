@@ -67,6 +67,65 @@ data class CloudBatchResponse(
     val status: String,
 )
 
+// --- Demo Camera DTOs ---
+
+@Serializable
+data class DemoCameraDto(
+    val id: String,
+    val name: String,
+    @SerialName("stream_url") val streamUrl: String,
+    @SerialName("hls_url") val hlsUrl: String,
+    val status: String,
+    val type: String? = null,
+)
+
+@Serializable
+data class DemoCamerasResponse(
+    val cameras: List<DemoCameraDto>,
+)
+
+// --- Public Camera DTOs ---
+
+@Serializable
+data class PublicCameraDto(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    val category: String,
+    val city: String? = null,
+    val state: String? = null,
+    @SerialName("hls_url") val hlsUrl: String? = null,
+    @SerialName("thumbnail_url") val thumbnailUrl: String? = null,
+    val status: String,
+    val featured: Boolean = false,
+)
+
+@Serializable
+data class PublicCamerasResponse(
+    val cameras: List<PublicCameraDto>,
+    val meta: PaginationMeta,
+)
+
+@Serializable
+data class PaginationMeta(
+    val page: Int,
+    @SerialName("page_size") val pageSize: Int,
+    val total: Int,
+    @SerialName("total_pages") val totalPages: Int,
+)
+
+@Serializable
+data class CategoryDto(
+    val key: String,
+    val label: String,
+    val count: Int,
+)
+
+@Serializable
+data class CategoriesResponse(
+    val categories: List<CategoryDto>,
+)
+
 // --- Sync DTOs ---
 
 @Serializable

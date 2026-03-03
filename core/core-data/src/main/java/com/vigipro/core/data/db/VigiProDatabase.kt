@@ -14,7 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WebhookEntity::class,
         PrivacyZoneEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class VigiProDatabase : RoomDatabase() {
@@ -127,6 +127,13 @@ abstract class VigiProDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_privacy_zones_camera_id ON privacy_zones(camera_id)")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE cameras ADD COLUMN hls_url TEXT")
+                db.execSQL("ALTER TABLE cameras ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

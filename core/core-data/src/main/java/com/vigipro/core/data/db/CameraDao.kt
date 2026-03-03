@@ -38,4 +38,10 @@ interface CameraDao {
 
     @Query("UPDATE cameras SET thumbnail_url = :thumbnailUrl WHERE id = :id")
     suspend fun updateThumbnailUrl(id: String, thumbnailUrl: String?)
+
+    @Query("SELECT COUNT(*) FROM cameras WHERE site_id = :siteId")
+    suspend fun countBySite(siteId: String): Int
+
+    @Query("SELECT * FROM cameras WHERE site_id = :siteId ORDER BY sort_order ASC")
+    suspend fun getCamerasBySiteSnapshot(siteId: String): List<CameraEntity>
 }

@@ -39,8 +39,8 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         preferencesRepository.updateDetectionEnabled(true)
                         Log.d(TAG, "User left sites $siteIds — detection ARMED")
                         notificationHelper.showStatusNotification(
-                            title = "Deteccao ativada",
-                            message = "Voce saiu da area monitorada. Deteccao automatica ativada.",
+                            title = "Detecção ativada",
+                            message = "Você saiu da área monitorada. Detecção automática ativada.",
                         )
                     }
                     Geofence.GEOFENCE_TRANSITION_ENTER -> {
@@ -48,8 +48,8 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         preferencesRepository.updateDetectionEnabled(false)
                         Log.d(TAG, "User entered sites $siteIds — detection DISARMED")
                         notificationHelper.showStatusNotification(
-                            title = "Deteccao desativada",
-                            message = "Voce chegou na area monitorada. Deteccao automatica desativada.",
+                            title = "Detecção desativada",
+                            message = "Você chegou na área monitorada. Detecção automática desativada.",
                         )
                     }
                 }

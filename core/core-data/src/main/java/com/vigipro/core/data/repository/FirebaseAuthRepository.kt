@@ -7,10 +7,12 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,20 +49,22 @@ class FirebaseAuthRepository @Inject constructor(
     override suspend fun signIn(email: String, password: String): Result<Unit> =
         runCatching {
             firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            syncSupabaseAuth(email, password)
+            // NonCancellable: sync MUST complete even if caller scope is cancelled
+            // (e.g. ViewModel destroyed during navigation after Firebase auth succeeds)
+            withContext(NonCancellable) { syncSupabaseAuth(email, password) }
         }
 
     override suspend fun signUp(email: String, password: String): Result<Unit> =
         runCatching {
             firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-            syncSupabaseAuth(email, password)
+            withContext(NonCancellable) { syncSupabaseAuth(email, password) }
         }
 
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> =
         runCatching {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             firebaseAuth.signInWithCredential(credential).await()
-            syncSupabaseGoogleAuth(idToken)
+            withContext(NonCancellable) { syncSupabaseGoogleAuth(idToken) }
         }
 
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
@@ -98,14 +102,15 @@ class FirebaseAuthRepository @Inject constructor(
                     this.password = password
                 }
             } catch (e: Exception) {
-                Timber.d(e, "Supabase auth sync failed (best-effort)")
+                Timber.w(e, "Supabase auth sync failed — DB operations may fail until re-login")
             }
         }
     }
 
     /**
-     * Syncs Google Sign-In to Supabase using ID Token provider.
-     * Requires Google provider enabled in Supabase dashboard.
+     * Syncs Google Sign-In to Supabase.
+     * Tries IDToken provider first; if Google is not enabled in Supabase dashboard,
+     * falls back to a shadow email/password account for RLS session.
      */
     private suspend fun syncSupabaseGoogleAuth(idToken: String) {
         try {
@@ -113,8 +118,23 @@ class FirebaseAuthRepository @Inject constructor(
                 provider = Google
                 this.idToken = idToken
             }
+            return
         } catch (e: Exception) {
-            Timber.d(e, "Supabase Google auth sync failed (best-effort)")
+            Timber.d(e, "IDToken sync failed, falling back to shadow account")
         }
+
+        // Fallback: create/sign-in shadow Supabase account using Firebase user's email.
+        // This handles the case where Google provider is not enabled in Supabase.
+        val email = firebaseAuth.currentUser?.email ?: return
+        val shadowPassword = shadowPassword(firebaseAuth.currentUser?.uid ?: return)
+        syncSupabaseAuth(email, shadowPassword)
     }
+
+    /**
+     * Deterministic password for shadow Supabase accounts.
+     * Used when OAuth providers aren't configured in Supabase — we only need
+     * a valid session for RLS, Firebase remains the source of truth.
+     */
+    private fun shadowPassword(firebaseUid: String): String =
+        "vp_shadow_${firebaseUid}"
 }

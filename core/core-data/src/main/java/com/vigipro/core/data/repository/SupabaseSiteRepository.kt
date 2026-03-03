@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +25,7 @@ private data class CreateSiteRequest(
 class SupabaseSiteRepository @Inject constructor(
     private val supabase: SupabaseClient,
     private val siteDao: SiteDao,
-    private val authRepository: AuthRepository,
+    private val sessionHelper: SupabaseSessionHelper,
 ) : SiteRepository {
 
     override fun getUserSites(): Flow<List<Site>> =
@@ -34,11 +35,10 @@ class SupabaseSiteRepository @Inject constructor(
 
     override suspend fun createSite(name: String, address: String?): Result<Site> =
         runCatching {
-            val userId = authRepository.currentUserId
-                ?: error("Usuario nao autenticado")
+            val supabaseUserId = sessionHelper.requireUserId()
 
             val site = supabase.from("sites")
-                .insert(CreateSiteRequest(name = name, address = address, ownerId = userId)) {
+                .insert(CreateSiteRequest(name = name, address = address, ownerId = supabaseUserId)) {
                     select()
                 }
                 .decodeSingle<Site>()
@@ -46,16 +46,7 @@ class SupabaseSiteRepository @Inject constructor(
             // Cache locally
             siteDao.insert(site.toEntity())
 
-            // Auto-create owner membership
-            supabase.from("site_members")
-                .insert(
-                    mapOf(
-                        "site_id" to site.id,
-                        "user_id" to userId,
-                        "role" to "owner",
-                    ),
-                )
-
+            // Owner membership is auto-created by DB trigger
             site
         }
 
@@ -85,14 +76,15 @@ class SupabaseSiteRepository @Inject constructor(
 
     override suspend fun syncSites() {
         try {
+            sessionHelper.requireUserId() // Ensure session before RLS query
             val sites = supabase.from("sites")
                 .select()
                 .decodeList<Site>()
 
             siteDao.deleteAll()
             siteDao.insertAll(sites.map { it.toEntity() })
-        } catch (_: Exception) {
-            // Offline — use cached data
+        } catch (e: Exception) {
+            Timber.d(e, "syncSites failed — using cached data")
         }
     }
 

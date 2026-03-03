@@ -2,7 +2,9 @@ package com.vigipro.core.data.repository
 
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraEvent
+import com.vigipro.core.network.cloud.CategoriesResponse
 import com.vigipro.core.network.cloud.CloudHealthResponse
+import com.vigipro.core.network.cloud.PaginationMeta
 
 /**
  * Repository for VigiPro Cloud communication.
@@ -28,4 +30,17 @@ interface CloudRepository {
 
     /** Fetch the user's cameras from the cloud. */
     suspend fun fetchCloudCameras(): Result<List<Camera>>
+
+    /** Fetch public demo cameras with HLS streaming URLs. */
+    suspend fun fetchDemoCameras(): Result<List<Camera>>
+
+    /** Fetch paginated public cameras, optionally filtered by category. */
+    suspend fun fetchPublicCameras(
+        category: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20,
+    ): Result<Pair<List<Camera>, PaginationMeta>>
+
+    /** Fetch available public camera categories. */
+    suspend fun fetchPublicCategories(): Result<CategoriesResponse>
 }

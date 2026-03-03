@@ -18,4 +18,6 @@ data class CameraEntity(
     val status: String = "offline",
     @ColumnInfo(name = "thumbnail_url") val thumbnailUrl: String? = null,
     @ColumnInfo(name = "sort_order") val sortOrder: Int = 0,
+    @ColumnInfo(name = "hls_url") val hlsUrl: String? = null,
+    @ColumnInfo(name = "is_demo") val isDemo: Boolean = false,
 )
