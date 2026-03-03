@@ -134,9 +134,23 @@ defmodule VigiproCloudWeb.Api.CameraController do
 
   # --- Demo cameras (no auth) ---
 
-  @doc "GET /api/demo/cameras — Public demo cameras"
+  @doc "GET /api/demo/cameras — Public demo cameras with HLS URLs"
   def demo_index(conn, _params) do
-    cameras = VigiproCloud.Demo.DemoServer.list_demo_cameras()
+    cameras =
+      VigiproCloud.Demo.DemoServer.list_demo_cameras()
+      |> Enum.map(fn cam ->
+        status = VigiproCloud.Streaming.StreamServer.get_status(cam.id)
+
+        %{
+          id: cam.id,
+          name: cam.name,
+          stream_url: cam.stream_url,
+          hls_url: "#{VigiproCloudWeb.Endpoint.url()}/hls/#{cam.id}/index.m3u8",
+          status: to_string(status),
+          type: to_string(cam.type)
+        }
+      end)
+
     json(conn, %{cameras: cameras})
   end
 

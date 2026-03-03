@@ -40,23 +40,35 @@ defmodule VigiproCloud.Streaming.HlsCleaner do
         Enum.each(dirs, fn dir ->
           path = Path.join(@hls_root, dir)
 
-          case File.stat(path) do
-            {:ok, %{mtime: mtime}} ->
-              mtime_unix = :calendar.datetime_to_gregorian_seconds(mtime) - 62_167_219_200
-              age = now - mtime_unix
+          # Skip cleanup if there's an active StreamServer for this camera
+          if stream_active?(dir) do
+            :ok
+          else
+            case File.stat(path) do
+              {:ok, %{mtime: mtime}} ->
+                mtime_unix = :calendar.datetime_to_gregorian_seconds(mtime) - 62_167_219_200
+                age = now - mtime_unix
 
-              if age > @stale_seconds do
-                Logger.info("[HlsCleaner] Removing stale directory: #{dir}")
-                File.rm_rf!(path)
-              end
+                if age > @stale_seconds do
+                  Logger.info("[HlsCleaner] Removing stale directory: #{dir}")
+                  File.rm_rf!(path)
+                end
 
-            _ ->
-              :ok
+              _ ->
+                :ok
+            end
           end
         end)
 
       {:error, :enoent} ->
         :ok
+    end
+  end
+
+  defp stream_active?(camera_id) do
+    case Registry.lookup(VigiproCloud.Cameras.Registry, {:stream, camera_id}) do
+      [{_pid, _}] -> true
+      _ -> false
     end
   end
 end

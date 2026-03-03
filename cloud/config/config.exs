@@ -47,12 +47,6 @@ config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Oban (background jobs)
-config :vigipro_cloud, Oban,
-  engine: Oban.Engines.Lite,
-  queues: [default: 10, recordings: 5],
-  repo: nil
-
 # Cloudflare R2 Storage
 config :vigipro_cloud,
   r2_bucket: "vigipro",
@@ -60,7 +54,10 @@ config :vigipro_cloud,
   r2_public_url: "https://pub-9bd1fe2f8d4844e99cdd166adaee7000.r2.dev"
 
 # Supabase Auth
+# SUPABASE_JWK: JWK JSON string para validação ES256 (chaves EC modernas do Supabase)
+# SUPABASE_JWT_SECRET: secret HMAC legado (HS256) — fallback se JWK não configurado
 config :vigipro_cloud,
+  supabase_jwk: System.get_env("SUPABASE_JWK"),
   supabase_jwt_secret: System.get_env("SUPABASE_JWT_SECRET", "dev-jwt-secret-change-me"),
   ephemeral_token_secret: System.get_env("EPHEMERAL_TOKEN_SECRET", "dev-ephemeral-secret")
 

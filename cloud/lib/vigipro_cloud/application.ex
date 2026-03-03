@@ -25,7 +25,10 @@ defmodule VigiproCloud.Application do
       VigiproCloud.Streaming.StreamSupervisor,
       VigiproCloud.Streaming.HlsCleaner,
 
-      # Demo server (public cameras — starts HLS streams on boot)
+      # Public camera catalog (ETS)
+      VigiproCloud.PublicCameras.PublicCameraStore,
+
+      # Demo server (starts HLS streams for lavfi test sources)
       VigiproCloud.Demo.DemoServer,
 
       # TODO: Background jobs (Oban) — requires Ecto repo, phase 2

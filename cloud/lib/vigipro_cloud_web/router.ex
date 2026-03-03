@@ -26,19 +26,16 @@ defmodule VigiproCloudWeb.Router do
     get "/:camera_id/:filename", HlsController, :serve
   end
 
-  # Public landing page — zero auth, live cameras
-  scope "/", VigiproCloudWeb do
-    pipe_through :browser
-
-    live "/", LandingLive, :index
-  end
-
-  # Public API — health check + demo cameras
+  # Public API — health check + demo/public cameras
   scope "/api", VigiproCloudWeb.Api do
     pipe_through :api
 
     get "/health", HealthController, :index
     get "/demo/cameras", CameraController, :demo_index
+
+    # Public camera catalog (curated)
+    get "/public/cameras", PublicCameraController, :index
+    get "/public/categories", PublicCameraController, :categories
   end
 
   # Private API — requires Supabase JWT

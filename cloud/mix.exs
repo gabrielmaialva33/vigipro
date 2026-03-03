@@ -56,19 +56,6 @@ defmodule VigiproCloud.MixProject do
        compile: false,
        depth: 1},
 
-      # WebRTC (Software Mansion)
-      {:ex_webrtc, "~> 0.9"},
-
-      # Membrane (streaming pipelines)
-      {:membrane_core, "~> 1.2"},
-      {:membrane_rtsp_plugin, "~> 0.7"},
-      {:membrane_h26x_plugin, "~> 0.10"},
-      {:membrane_webrtc_plugin, "~> 0.22"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.19"},
-
-      # Background jobs
-      {:oban, "~> 2.18"},
-
       # Storage (Cloudflare R2)
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},

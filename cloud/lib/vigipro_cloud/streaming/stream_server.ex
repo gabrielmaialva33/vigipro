@@ -58,6 +58,9 @@ defmodule VigiproCloud.Streaming.StreamServer do
 
   @impl true
   def handle_continue(:start_ffmpeg, state) do
+    # Kill any orphaned FFmpeg before starting a new one
+    kill_ffmpeg(state)
+
     case start_ffmpeg(state.camera_id, state.rtsp_url) do
       {:ok, port, os_pid} ->
         Logger.info("[StreamServer] FFmpeg started for #{state.camera_id} (pid #{os_pid})")
@@ -78,8 +81,8 @@ defmodule VigiproCloud.Streaming.StreamServer do
   end
 
   @impl true
-  def handle_info({port, {:data, data}}, %{port: port} = state) do
-    line = to_string(data)
+  def handle_info({port, {:data, {_, line_data}}}, %{port: port} = state) do
+    line = to_string(line_data)
 
     cond do
       String.contains?(line, "Opening") ->
@@ -137,37 +140,67 @@ defmodule VigiproCloud.Streaming.StreamServer do
     # If stream_url starts with "lavfi:" use direct test source (no RTSP, low CPU)
     # Otherwise, transcode RTSP stream
     args =
-      if String.starts_with?(rtsp_url, "lavfi:") do
-        lavfi_src = String.replace_prefix(rtsp_url, "lavfi:", "")
+      cond do
+        String.starts_with?(rtsp_url, "lavfi:") ->
+          lavfi_src = String.replace_prefix(rtsp_url, "lavfi:", "")
 
-        [
-          "-hide_banner", "-loglevel", "warning",
-          "-re",
-          "-f", "lavfi", "-i", lavfi_src,
-          "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency",
-          "-g", "30", "-keyint_min", "30",
-          "-b:v", "400k", "-maxrate", "400k", "-bufsize", "800k",
-          "-pix_fmt", "yuv420p",
-          "-an",
-          "-f", "hls",
-          "-hls_time", "2", "-hls_list_size", "5",
-          "-hls_flags", "delete_segments+append_list",
-          "-hls_segment_filename", segment_pattern,
-          playlist
-        ]
-      else
-        [
-          "-hide_banner", "-loglevel", "warning",
-          "-rtsp_transport", "tcp",
-          "-i", rtsp_url,
-          "-c:v", "copy",
-          "-an",
-          "-f", "hls",
-          "-hls_time", "2", "-hls_list_size", "5",
-          "-hls_flags", "delete_segments+append_list",
-          "-hls_segment_filename", segment_pattern,
-          playlist
-        ]
+          [
+            "-hide_banner", "-loglevel", "warning",
+            "-re",
+            "-f", "lavfi", "-i", lavfi_src,
+            "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency",
+            "-g", "30", "-keyint_min", "30",
+            "-b:v", "400k", "-maxrate", "400k", "-bufsize", "800k",
+            "-pix_fmt", "yuv420p",
+            "-an",
+            "-f", "hls",
+            "-hls_time", "2", "-hls_list_size", "5",
+            "-hls_flags", "delete_segments+append_list+temp_file+independent_segments",
+            "-hls_delete_threshold", "2",
+            "-hls_segment_filename", segment_pattern,
+            playlist
+          ]
+
+        String.starts_with?(rtsp_url, "mjpeg:") ->
+          # MJPEG over HTTP (e.g. COR Rio cameras) → re-encode to HLS
+          # reconnect flags handle COR Rio's periodic connection drops
+          mjpeg_url = String.replace_prefix(rtsp_url, "mjpeg:", "")
+
+          [
+            "-hide_banner", "-loglevel", "warning",
+            "-reconnect", "1",
+            "-reconnect_streamed", "1",
+            "-reconnect_at_eof", "1",
+            "-reconnect_delay_max", "5",
+            "-f", "mjpeg", "-i", mjpeg_url,
+            "-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency",
+            "-g", "30", "-keyint_min", "30",
+            "-b:v", "300k", "-maxrate", "300k", "-bufsize", "600k",
+            "-r", "10",
+            "-pix_fmt", "yuv420p",
+            "-an",
+            "-f", "hls",
+            "-hls_time", "3", "-hls_list_size", "5",
+            "-hls_flags", "delete_segments+append_list+temp_file+independent_segments",
+            "-hls_delete_threshold", "2",
+            "-hls_segment_filename", segment_pattern,
+            playlist
+          ]
+
+        true ->
+          [
+            "-hide_banner", "-loglevel", "warning",
+            "-rtsp_transport", "tcp",
+            "-i", rtsp_url,
+            "-c:v", "copy",
+            "-an",
+            "-f", "hls",
+            "-hls_time", "2", "-hls_list_size", "6",
+            "-hls_flags", "delete_segments+append_list+temp_file+independent_segments",
+            "-hls_delete_threshold", "2",
+            "-hls_segment_filename", segment_pattern,
+            playlist
+          ]
       end
 
     # Use a wrapper script to get the OS PID
