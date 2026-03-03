@@ -118,7 +118,7 @@ fun RecordingsScreen(
         modifier = modifier,
         topBar = {
             VigiProTopBar(
-                title = "Gravacoes",
+                title = "Gravações",
                 onBackClick = viewModel::onBack,
             )
         },
@@ -126,15 +126,15 @@ fun RecordingsScreen(
         when {
             state.isLoading -> {
                 LoadingIndicator(
-                    message = "Carregando gravacoes...",
+                    message = "Carregando gravações...",
                     modifier = Modifier.padding(padding),
                 )
             }
             state.recordings.isEmpty() -> {
                 EmptyState(
                     icon = PhosphorIcons.Regular.VideoCamera,
-                    title = "Nenhuma gravacao",
-                    subtitle = "Grave videos das suas cameras para revisa-los aqui",
+                    title = "Nenhuma gravação",
+                    subtitle = "Grave vídeos das suas câmeras para revisá-los aqui",
                     modifier = Modifier.padding(padding),
                 )
             }

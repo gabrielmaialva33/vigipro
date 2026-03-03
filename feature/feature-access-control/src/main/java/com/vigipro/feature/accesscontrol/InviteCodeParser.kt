@@ -2,7 +2,7 @@ package com.vigipro.feature.accesscontrol
 
 object InviteCodeParser {
 
-    private val URL_PATTERN = Regex("vigipro\\.app/invite/([A-Za-z0-9]+)")
+    private val URL_PATTERN = Regex("(?i)vigipro\\.app/invite/([A-Za-z0-9]+)")
 
     /**
      * Extracts the invite code from a scanned value.

@@ -107,7 +107,7 @@ fun AlertDigestScreen(
                 EmptyState(
                     icon = PhosphorIcons.Regular.FileText,
                     title = "Nenhum evento recente",
-                    subtitle = "Os resumos de atividade das cameras aparecerao aqui quando houver eventos",
+                    subtitle = "Os resumos de atividade das câmeras aparecerão aqui quando houver eventos",
                     modifier = Modifier.padding(padding),
                 )
             }

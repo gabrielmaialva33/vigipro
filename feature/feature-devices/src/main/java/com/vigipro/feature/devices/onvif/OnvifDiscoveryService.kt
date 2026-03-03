@@ -7,6 +7,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
+import java.io.StringReader
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -164,19 +167,31 @@ class OnvifDiscoveryService @Inject constructor(
 
     private fun parseXAddrs(xml: String): List<String> {
         val addresses = mutableListOf<String>()
-        val xAddrsRegex = Regex("<[^:]*:?XAddrs>([^<]+)</[^:]*:?XAddrs>")
-        xAddrsRegex.findAll(xml).forEach { match ->
-            val urls = match.groupValues[1].trim().split("\\s+".toRegex())
-            for (url in urls) {
-                try {
-                    val uri = java.net.URI(url)
-                    val host = uri.host ?: continue
-                    val port = if (uri.port > 0) uri.port else 80
-                    addresses.add("$host:$port")
-                } catch (_: Exception) {
-                    // Skip malformed URLs
+        try {
+            val factory = XmlPullParserFactory.newInstance()
+            factory.isNamespaceAware = true
+            val parser = factory.newPullParser()
+            parser.setInput(StringReader(xml))
+
+            var eventType = parser.eventType
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG && parser.name == "XAddrs") {
+                    val urls = parser.nextText().trim().split("\\s+".toRegex())
+                    for (url in urls) {
+                        try {
+                            val uri = java.net.URI(url)
+                            val host = uri.host ?: continue
+                            val port = if (uri.port > 0) uri.port else 80
+                            addresses.add("$host:$port")
+                        } catch (_: Exception) {
+                            // Skip malformed URLs
+                        }
+                    }
                 }
+                eventType = parser.next()
             }
+        } catch (_: Exception) {
+            // Fallback: return whatever was parsed so far
         }
         return addresses.distinct()
     }

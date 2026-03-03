@@ -95,7 +95,7 @@ fun EventTimelineScreen(
                 EmptyState(
                     icon = PhosphorIcons.Regular.Cloud,
                     title = "Nenhum evento",
-                    subtitle = "Os eventos de status das cameras aparecerao aqui automaticamente",
+                    subtitle = "Os eventos de status das câmeras aparecerão aqui automaticamente",
                     modifier = Modifier.padding(padding),
                 )
             }

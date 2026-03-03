@@ -1,5 +1,6 @@
 package com.vigipro.feature.accesscontrol
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.repository.AuthRepository
@@ -40,31 +41,41 @@ data class AccessControlState(
 sealed interface AccessControlSideEffect {
     data class ShowSnackbar(val message: String) : AccessControlSideEffect
     data object NavigateBack : AccessControlSideEffect
+    data object NavigateToSites : AccessControlSideEffect
 }
 
 @HiltViewModel
 class AccessControlViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val siteRepository: SiteRepository,
     private val invitationRepository: InvitationRepository,
     private val authRepository: AuthRepository,
 ) : ViewModel(), ContainerHost<AccessControlState, AccessControlSideEffect> {
 
+    private val initialRedeemCode: String = savedStateHandle.get<String>("code") ?: ""
+
     override val container = viewModelScope.container<AccessControlState, AccessControlSideEffect>(
         AccessControlState(),
     ) {
+        if (initialRedeemCode.isNotBlank()) {
+            reduce { state.copy(redeemCode = initialRedeemCode, selectedTab = 2) }
+        }
         observeSites()
     }
 
     private fun observeSites() = intent {
+        siteRepository.syncSites()
         siteRepository.getUserSites().collect { sites ->
             val selectedId = state.selectedSiteId ?: sites.firstOrNull()?.id
-            reduce { state.copy(sites = sites, selectedSiteId = selectedId) }
+            reduce { state.copy(sites = sites, selectedSiteId = selectedId, isLoading = false) }
             if (selectedId != null) {
                 loadSiteData(selectedId)
-            } else {
-                reduce { state.copy(isLoading = false) }
             }
         }
+    }
+
+    fun onNavigateToSites() = intent {
+        postSideEffect(AccessControlSideEffect.NavigateToSites)
     }
 
     private fun loadSiteData(siteId: String) = intent {
@@ -93,6 +104,12 @@ class AccessControlViewModel @Inject constructor(
 
     // Create invite
     fun onShowCreateInvite() = intent {
+        if (state.selectedSiteId == null) {
+            postSideEffect(
+                AccessControlSideEffect.ShowSnackbar("Selecione um local primeiro"),
+            )
+            return@intent
+        }
         reduce { state.copy(showCreateInvite = true, createdInviteCode = null) }
     }
 
@@ -125,11 +142,21 @@ class AccessControlViewModel @Inject constructor(
     }
 
     fun onCreateInvite() = intent {
-        val siteId = state.selectedSiteId ?: return@intent
+        val siteId = state.selectedSiteId
+        if (siteId == null) {
+            postSideEffect(
+                AccessControlSideEffect.ShowSnackbar("Selecione um local primeiro"),
+            )
+            return@intent
+        }
 
+        val isTimeRestricted = state.inviteRole == UserRole.TIME_RESTRICTED
         val result = invitationRepository.createInvitation(
             siteId = siteId,
             role = state.inviteRole,
+            timeStart = state.timeStart.takeIf { isTimeRestricted && it.isNotBlank() },
+            timeEnd = state.timeEnd.takeIf { isTimeRestricted && it.isNotBlank() },
+            daysOfWeek = state.selectedDays.takeIf { isTimeRestricted },
             maxUses = state.inviteMaxUses,
             expiresInHours = state.inviteExpiresHours,
         )
@@ -144,9 +171,12 @@ class AccessControlViewModel @Inject constructor(
             }
             postSideEffect(AccessControlSideEffect.ShowSnackbar("Convite criado"))
         }.onFailure { error ->
-            postSideEffect(
-                AccessControlSideEffect.ShowSnackbar("Erro ao criar convite. Tente novamente"),
-            )
+            val msg = when {
+                error.message?.contains("Sessao expirada") == true ->
+                    "Sessao expirada. Faca login novamente"
+                else -> "Erro ao criar convite. Tente novamente"
+            }
+            postSideEffect(AccessControlSideEffect.ShowSnackbar(msg))
         }
     }
 
@@ -192,9 +222,16 @@ class AccessControlViewModel @Inject constructor(
             }
             .onFailure { error ->
                 reduce { state.copy(isRedeeming = false) }
-                postSideEffect(
-                    AccessControlSideEffect.ShowSnackbar("Erro ao resgatar convite. Verifique o codigo"),
-                )
+                val message = when {
+                    error.message?.contains("Sessao expirada") == true ->
+                        "Sessao expirada. Faca login novamente"
+                    error.message?.contains("ja e membro") == true -> "Voce ja e membro deste site"
+                    error.message?.contains("nao encontrado") == true -> "Convite nao encontrado"
+                    error.message?.contains("expirado") == true -> "Convite expirado"
+                    error.message?.contains("esgotado") == true -> "Convite esgotado"
+                    else -> "Erro ao resgatar convite. Verifique o codigo"
+                }
+                postSideEffect(AccessControlSideEffect.ShowSnackbar(message))
             }
     }
 

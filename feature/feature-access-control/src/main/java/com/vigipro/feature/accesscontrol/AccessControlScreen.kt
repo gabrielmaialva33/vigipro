@@ -1,5 +1,6 @@
 package com.vigipro.feature.accesscontrol
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.*
@@ -18,6 +22,8 @@ import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vigipro.core.model.Invitation
 import com.vigipro.core.ui.theme.Dimens
@@ -48,6 +55,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun AccessControlScreen(
     onBack: () -> Unit,
+    onNavigateToSites: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: AccessControlViewModel = hiltViewModel(),
 ) {
@@ -60,6 +68,7 @@ fun AccessControlScreen(
                 snackbarHostState.showSnackbar(effect.message)
             }
             AccessControlSideEffect.NavigateBack -> onBack()
+            AccessControlSideEffect.NavigateToSites -> onNavigateToSites()
         }
     }
 
@@ -115,6 +124,76 @@ fun AccessControlScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            // Empty state: no sites
+            if (!state.isLoading && state.sites.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(Dimens.SpacingXl),
+                    ) {
+                        Icon(
+                            PhosphorIcons.Regular.MapPin,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
+                        Text(
+                            text = "Crie um local primeiro",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+                        Text(
+                            text = "Para gerenciar membros e convites, voce precisa ter pelo menos um local cadastrado",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.SpacingXl))
+                        androidx.compose.material3.Button(onClick = viewModel::onNavigateToSites) {
+                            Icon(PhosphorIcons.Regular.Plus, null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                            Text("Criar Local")
+                        }
+                    }
+                }
+                return@Scaffold
+            }
+
+            // Site selector
+            if (state.sites.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        PhosphorIcons.Regular.MapPin,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    state.sites.forEach { site ->
+                        FilterChip(
+                            selected = state.selectedSiteId == site.id,
+                            onClick = { viewModel.onSiteSelected(site.id) },
+                            label = { Text(site.name) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                        )
+                    }
+                }
+            }
+
             TabRow(selectedTabIndex = state.selectedTab) {
                 Tab(
                     selected = state.selectedTab == 0,

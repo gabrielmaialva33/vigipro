@@ -9,6 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
@@ -35,6 +38,8 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -88,6 +93,7 @@ fun DashboardScreen(
     onNavigateToMultiview: () -> Unit = {},
     onNavigateToRecordings: () -> Unit = {},
     onNavigateToAlertDigest: () -> Unit = {},
+    onNavigateToSites: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -106,6 +112,7 @@ fun DashboardScreen(
             DashboardSideEffect.NavigateToMultiview -> onNavigateToMultiview()
             DashboardSideEffect.NavigateToRecordings -> onNavigateToRecordings()
             DashboardSideEffect.NavigateToAlertDigest -> onNavigateToAlertDigest()
+            DashboardSideEffect.NavigateToSites -> onNavigateToSites()
         }
     }
 
@@ -113,7 +120,7 @@ fun DashboardScreen(
     if (state.cameraToDelete != null) {
         AlertDialog(
             onDismissRequest = viewModel::onDismissDelete,
-            title = { Text("Excluir Camera") },
+            title = { Text("Excluir Câmera") },
             text = { Text("Tem certeza que deseja excluir \"${state.cameraToDelete!!.name}\"?") },
             confirmButton = {
                 TextButton(onClick = viewModel::onConfirmDelete) {
@@ -152,6 +159,10 @@ fun DashboardScreen(
                 onNavigateToAccessControl = {
                     scope.launch { drawerState.close() }
                     viewModel.onAccessControlClick()
+                },
+                onNavigateToSites = {
+                    scope.launch { drawerState.close() }
+                    viewModel.onSitesClick()
                 },
                 onNavigateToSettings = {
                     scope.launch { drawerState.close() }
@@ -235,12 +246,12 @@ fun DashboardScreen(
                         modifier = Modifier.padding(padding),
                     )
                 }
-                state.cameras.isEmpty() -> {
+                state.allCameras.isEmpty() -> {
                     EmptyState(
                         icon = PhosphorIcons.Regular.VideoCameraSlash,
                         title = "Nenhuma Camera Detectada",
                         subtitle = "Sua central de monitoramento esta vazia. Adicione sua primeira camera IP ou ONVIF para comecar a vigiar seu espaco.",
-                        actionLabel = "Adicionar Camera",
+                        actionLabel = "Adicionar Câmera",
                         onAction = viewModel::onAddCameraClick,
                         modifier = Modifier.padding(padding),
                     )
@@ -254,10 +265,10 @@ fun DashboardScreen(
                         // derivedStateOf: only recalculates when cameras list actually changes,
                         // not on every recomposition triggered by other state (e.g. drawer state)
                         val onlineCount by remember {
-                            derivedStateOf { state.cameras.count { it.status == CameraStatus.ONLINE } }
+                            derivedStateOf { state.allCameras.count { it.status == CameraStatus.ONLINE } }
                         }
                         val totalCount by remember {
-                            derivedStateOf { state.cameras.size }
+                            derivedStateOf { state.allCameras.size }
                         }
                         val allHealthy by remember {
                             derivedStateOf { onlineCount == totalCount && totalCount > 0 }
@@ -305,6 +316,48 @@ fun DashboardScreen(
                             }
                         }
 
+                        // Site filter chips (only show when multiple sites exist)
+                        if (state.sites.size > 1) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                            ) {
+                                FilterChip(
+                                    selected = state.selectedSiteId == null,
+                                    onClick = {
+                                        state.sites.firstOrNull()?.id?.let {
+                                            viewModel.onSiteSelected(it)
+                                        }
+                                    },
+                                    label = { Text("Todos") },
+                                    leadingIcon = if (state.selectedSiteId == null) {
+                                        { Icon(PhosphorIcons.Regular.Check, null, modifier = Modifier.size(16.dp)) }
+                                    } else null,
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    ),
+                                )
+                                state.sites.forEach { site ->
+                                    FilterChip(
+                                        selected = state.selectedSiteId == site.id,
+                                        onClick = { viewModel.onSiteSelected(site.id) },
+                                        label = { Text(site.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                        leadingIcon = if (state.selectedSiteId == site.id) {
+                                            { Icon(PhosphorIcons.Regular.MapPin, null, modifier = Modifier.size(16.dp)) }
+                                        } else null,
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(state.gridLayout.columns),
                             modifier = Modifier.fillMaxSize(),
@@ -312,7 +365,7 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
                             verticalArrangement = Arrangement.spacedBy(Dimens.GridCellSpacing),
                         ) {
-                            items(state.cameras, key = { it.id }) { camera ->
+                            items(state.allCameras, key = { it.id }) { camera ->
                                 var showMenu by remember { mutableStateOf(false) }
 
                                 Box(modifier = Modifier.animateItem(
@@ -325,35 +378,39 @@ fun DashboardScreen(
                                         status = camera.status.toConnectionStatus(),
                                         thumbnailUrl = camera.thumbnailUrl,
                                         onClick = { viewModel.onCameraClick(camera.id) },
-                                        onLongClick = { showMenu = true },
+                                        onLongClick = { if (!camera.isDemo) showMenu = true },
                                         ptzCapable = camera.ptzCapable,
                                         audioCapable = camera.audioCapable,
+                                        isDemo = camera.isDemo,
+                                        isLive = camera.hlsUrl != null && camera.status == CameraStatus.ONLINE,
                                     )
 
-                                    DropdownMenu(
-                                        expanded = showMenu,
-                                        onDismissRequest = { showMenu = false },
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("Editar") },
-                                            onClick = {
-                                                showMenu = false
-                                                viewModel.onEditCameraClick(camera.id)
-                                            },
-                                            leadingIcon = { Icon(PhosphorIcons.Regular.PencilSimple, null) },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text("Excluir") },
-                                            onClick = {
-                                                showMenu = false
-                                                viewModel.onDeleteCameraClick(camera.id)
-                                            },
-                                            leadingIcon = { Icon(PhosphorIcons.Regular.Trash, null) },
-                                            colors = MenuDefaults.itemColors(
-                                                textColor = MaterialTheme.colorScheme.error,
-                                                leadingIconColor = MaterialTheme.colorScheme.error,
-                                            ),
-                                        )
+                                    if (!camera.isDemo) {
+                                        DropdownMenu(
+                                            expanded = showMenu,
+                                            onDismissRequest = { showMenu = false },
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("Editar") },
+                                                onClick = {
+                                                    showMenu = false
+                                                    viewModel.onEditCameraClick(camera.id)
+                                                },
+                                                leadingIcon = { Icon(PhosphorIcons.Regular.PencilSimple, null) },
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Excluir") },
+                                                onClick = {
+                                                    showMenu = false
+                                                    viewModel.onDeleteCameraClick(camera.id)
+                                                },
+                                                leadingIcon = { Icon(PhosphorIcons.Regular.Trash, null) },
+                                                colors = MenuDefaults.itemColors(
+                                                    textColor = MaterialTheme.colorScheme.error,
+                                                    leadingIconColor = MaterialTheme.colorScheme.error,
+                                                ),
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -373,11 +430,15 @@ private fun DrawerContent(
     onNavigateToEventTimeline: () -> Unit,
     onNavigateToAlertDigest: () -> Unit,
     onNavigateToAccessControl: () -> Unit,
+    onNavigateToSites: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(300.dp),
     ) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+        ) {
         // Profile header
         Column(
             modifier = Modifier
@@ -436,7 +497,7 @@ private fun DrawerContent(
         )
         DrawerNavItem(
             icon = PhosphorIcons.Regular.VideoCamera,
-            label = "Gravacoes",
+            label = "Gravações",
             onClick = onNavigateToRecordings,
         )
         DrawerNavItem(
@@ -453,15 +514,21 @@ private fun DrawerContent(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         DrawerNavItem(
+            icon = PhosphorIcons.Regular.MapPin,
+            label = "Meus Locais",
+            onClick = onNavigateToSites,
+        )
+        DrawerNavItem(
             icon = PhosphorIcons.Regular.Users,
             label = "Controle de Acesso",
             onClick = onNavigateToAccessControl,
         )
         DrawerNavItem(
             icon = PhosphorIcons.Regular.Gear,
-            label = "Configuracoes",
+            label = "Configurações",
             onClick = onNavigateToSettings,
         )
+        }
     }
 }
 

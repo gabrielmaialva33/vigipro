@@ -341,9 +341,13 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
-                TextButton(onClick = viewModel::onToggleMode) {
+                TextButton(
+                    onClick = viewModel::onToggleMode,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Text(
-                        if (state.isLogin) "Nao tem conta? Criar conta" else "Ja tem conta? Entrar",
+                        text = if (state.isLogin) "Não tem conta? Criar conta" else "Já tem conta? Entrar",
+                        textAlign = TextAlign.Center,
                     )
                 }
             }

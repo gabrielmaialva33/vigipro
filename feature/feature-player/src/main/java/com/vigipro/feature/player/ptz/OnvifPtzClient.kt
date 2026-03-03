@@ -1,13 +1,18 @@
 package com.vigipro.feature.player.ptz
 
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
-import java.net.HttpURLConnection
-import java.net.SocketTimeoutException
 import java.net.URI
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,6 +25,14 @@ class OnvifPtzClient @Inject constructor() {
     @Volatile private var username: String = ""
     @Volatile private var password: String = ""
 
+    private val httpClient = HttpClient(OkHttp) {
+        install(HttpTimeout) {
+            connectTimeoutMillis = 5_000
+            requestTimeoutMillis = 10_000
+            socketTimeoutMillis = 5_000
+        }
+    }
+
     val isConnected: Boolean get() = ptzServiceUrl != null && profileToken != null
 
     suspend fun connect(
@@ -27,16 +40,16 @@ class OnvifPtzClient @Inject constructor() {
         username: String,
         password: String,
         streamProfileToken: String?,
-    ): Boolean = withContext(Dispatchers.IO) {
-        this@OnvifPtzClient.username = username
-        this@OnvifPtzClient.password = password
+    ): Boolean {
+        this.username = username
+        this.password = password
 
-        try {
+        return try {
             val deviceUrl = buildDeviceUrl(onvifAddress)
             val servicesXml = sendSoapRequest(
                 deviceUrl,
                 PtzSoapCommands.buildGetServicesRequest(username, password),
-            ) ?: return@withContext false
+            ) ?: return false
 
             val ptzUrl = parsePtzServiceUrl(servicesXml)
             if (ptzUrl == null) {
@@ -53,12 +66,12 @@ class OnvifPtzClient @Inject constructor() {
                     if (response != null) {
                         ptzServiceUrl = fallback
                         profileToken = testToken
-                        return@withContext true
+                        return true
                     }
                 }
                 ptzServiceUrl = null
                 profileToken = null
-                return@withContext false
+                return false
             }
 
             ptzServiceUrl = ptzUrl
@@ -70,23 +83,22 @@ class OnvifPtzClient @Inject constructor() {
         }
     }
 
-    suspend fun continuousMove(x: Float, y: Float, z: Float): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            val url = ptzServiceUrl ?: return@withContext Result.failure(Exception("PTZ nao conectado"))
-            val token = profileToken ?: return@withContext Result.failure(Exception("Profile nao definido"))
-            try {
-                val xml = PtzSoapCommands.buildContinuousMoveRequest(token, x, y, z, username, password)
-                sendSoapRequest(url, xml)
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
+    suspend fun continuousMove(x: Float, y: Float, z: Float): Result<Unit> {
+        val url = ptzServiceUrl ?: return Result.failure(Exception("PTZ nao conectado"))
+        val token = profileToken ?: return Result.failure(Exception("Profile nao definido"))
+        return try {
+            val xml = PtzSoapCommands.buildContinuousMoveRequest(token, x, y, z, username, password)
+            sendSoapRequest(url, xml)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
+    }
 
-    suspend fun stop(): Result<Unit> = withContext(Dispatchers.IO) {
-        val url = ptzServiceUrl ?: return@withContext Result.failure(Exception("PTZ nao conectado"))
-        val token = profileToken ?: return@withContext Result.failure(Exception("Profile nao definido"))
-        try {
+    suspend fun stop(): Result<Unit> {
+        val url = ptzServiceUrl ?: return Result.failure(Exception("PTZ nao conectado"))
+        val token = profileToken ?: return Result.failure(Exception("Profile nao definido"))
+        return try {
             val xml = PtzSoapCommands.buildStopRequest(token, username, password)
             sendSoapRequest(url, xml)
             Result.success(Unit)
@@ -95,23 +107,23 @@ class OnvifPtzClient @Inject constructor() {
         }
     }
 
-    suspend fun getPresets(): Result<List<PtzPreset>> = withContext(Dispatchers.IO) {
-        val url = ptzServiceUrl ?: return@withContext Result.failure(Exception("PTZ nao conectado"))
-        val token = profileToken ?: return@withContext Result.failure(Exception("Profile nao definido"))
-        try {
+    suspend fun getPresets(): Result<List<PtzPreset>> {
+        val url = ptzServiceUrl ?: return Result.failure(Exception("PTZ nao conectado"))
+        val token = profileToken ?: return Result.failure(Exception("Profile nao definido"))
+        return try {
             val xml = PtzSoapCommands.buildGetPresetsRequest(token, username, password)
             val response = sendSoapRequest(url, xml)
-                ?: return@withContext Result.success(emptyList())
+                ?: return Result.success(emptyList())
             Result.success(parsePresets(response))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun gotoPreset(presetToken: String): Result<Unit> = withContext(Dispatchers.IO) {
-        val url = ptzServiceUrl ?: return@withContext Result.failure(Exception("PTZ nao conectado"))
-        val token = profileToken ?: return@withContext Result.failure(Exception("Profile nao definido"))
-        try {
+    suspend fun gotoPreset(presetToken: String): Result<Unit> {
+        val url = ptzServiceUrl ?: return Result.failure(Exception("PTZ nao conectado"))
+        val token = profileToken ?: return Result.failure(Exception("Profile nao definido"))
+        return try {
             val xml = PtzSoapCommands.buildGotoPresetRequest(token, presetToken, username, password)
             sendSoapRequest(url, xml)
             Result.success(Unit)
@@ -138,31 +150,22 @@ class OnvifPtzClient @Inject constructor() {
         }
     }
 
-    private fun sendSoapRequest(url: String, soapXml: String): String? {
-        val connection = URI(url).toURL().openConnection() as HttpURLConnection
+    private suspend fun sendSoapRequest(url: String, soapXml: String): String? {
         return try {
-            connection.requestMethod = "POST"
-            connection.setRequestProperty("Content-Type", "application/soap+xml; charset=utf-8")
-            connection.connectTimeout = 5_000
-            connection.readTimeout = 5_000
-            connection.doOutput = true
-
-            connection.outputStream.use { it.write(soapXml.toByteArray(Charsets.UTF_8)) }
-
-            if (connection.responseCode in 200..299) {
-                connection.inputStream.use { it.bufferedReader().readText() }
+            val response = httpClient.post(url) {
+                contentType(ContentType("application", "soap+xml"))
+                setBody(soapXml)
+            }
+            if (response.status.isSuccess()) {
+                response.bodyAsText()
             } else {
-                val errorBody = try {
-                    connection.errorStream?.use { it.bufferedReader().readText() }
-                } catch (_: Exception) { null }
-                Log.w(TAG, "SOAP error ${connection.responseCode}: $errorBody")
+                val errorBody = try { response.bodyAsText() } catch (_: Exception) { null }
+                Log.w(TAG, "SOAP error ${response.status}: $errorBody")
                 null
             }
-        } catch (e: SocketTimeoutException) {
-            Log.w(TAG, "SOAP request timeout: ${e.message}")
+        } catch (e: Exception) {
+            Log.w(TAG, "SOAP request failed: ${e.message}")
             null
-        } finally {
-            // Do not call disconnect() to allow HTTP keep-alive connection reuse
         }
     }
 

@@ -45,10 +45,10 @@ class VigiProMessagingService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val alertChannel = NotificationChannel(
                 CHANNEL_ALERTS,
-                "Alertas de Seguranca",
+                "Alertas de Segurança",
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
-                description = "Notificacoes de alertas de cameras e eventos de seguranca"
+                description = "Notificações de alertas de câmeras e eventos de segurança"
             }
             val generalChannel = NotificationChannel(
                 CHANNEL_GENERAL,

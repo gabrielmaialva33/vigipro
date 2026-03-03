@@ -9,6 +9,7 @@ import com.vigipro.core.data.rtsp.RtspConnectionTester
 import com.vigipro.core.data.sync.CloudSyncManager
 import com.vigipro.core.model.Camera
 import com.vigipro.core.model.CameraStatus
+import com.vigipro.core.model.LOCAL_SITE_ID
 import com.vigipro.feature.devices.onvif.OnvifDeviceInfo
 import com.vigipro.feature.devices.onvif.OnvifDiscoveryService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -158,7 +159,7 @@ class AddCameraViewModel @Inject constructor(
             reduce { state.copy(isScanning = false, discoveredDevices = devices) }
         } catch (e: Exception) {
             reduce { state.copy(isScanning = false) }
-            postSideEffect(AddCameraSideEffect.ShowError("Erro na busca de dispositivos. Verifique o endereco"))
+            postSideEffect(AddCameraSideEffect.ShowError("Erro na busca de dispositivos. Verifique o endereço"))
         }
     }
 
@@ -177,7 +178,7 @@ class AddCameraViewModel @Inject constructor(
     fun onTestConnection() = intent {
         if (!state.canTest) {
             if (state.connectionMethod == ConnectionMethod.IP_ADDRESS) {
-                reduce { state.copy(ipAddressError = "Endereco IP obrigatorio") }
+                reduce { state.copy(ipAddressError = "Endereço IP obrigatório") }
             }
             return@intent
         }
@@ -192,9 +193,9 @@ class AddCameraViewModel @Inject constructor(
         val result = connectionTester.testConnection(url)
 
         val message = if (result.success) {
-            "Conexao bem-sucedida (${result.latencyMs}ms)"
+            "Conexão bem-sucedida (${result.latencyMs}ms)"
         } else {
-            result.errorMessage ?: "Falha na conexao"
+            result.errorMessage ?: "Falha na conexão"
         }
 
         reduce { state.copy(isTesting = false, testResult = message) }
@@ -202,9 +203,9 @@ class AddCameraViewModel @Inject constructor(
     }
 
     fun onSave() = intent {
-        val nameError = if (state.name.isBlank()) "Nome obrigatorio" else null
+        val nameError = if (state.name.isBlank()) "Nome obrigatório" else null
         val ipAddressError = if (state.connectionMethod == ConnectionMethod.IP_ADDRESS && state.ipAddress.isBlank()) {
-            "Endereco IP obrigatorio"
+            "Endereço IP obrigatório"
         } else {
             null
         }
@@ -215,7 +216,7 @@ class AddCameraViewModel @Inject constructor(
         }
 
         if (state.effectiveRtspUrl.isBlank()) {
-            postSideEffect(AddCameraSideEffect.ShowError("URL RTSP nao disponivel"))
+            postSideEffect(AddCameraSideEffect.ShowError("URL RTSP não disponível"))
             return@intent
         }
 
@@ -231,7 +232,7 @@ class AddCameraViewModel @Inject constructor(
             val testResult = connectionTester.testConnection(url)
             val initialStatus = if (testResult.success) CameraStatus.ONLINE else CameraStatus.OFFLINE
 
-            val activeSiteId = siteRepository.getUserSites().firstOrNull()?.firstOrNull()?.id ?: "local"
+            val activeSiteId = siteRepository.getUserSites().firstOrNull()?.firstOrNull()?.id ?: LOCAL_SITE_ID
 
             val camera = Camera(
                 id = state.editCameraId ?: UUID.randomUUID().toString(),
@@ -251,11 +252,11 @@ class AddCameraViewModel @Inject constructor(
 
             if (state.isEditMode) {
                 cameraRepository.updateCamera(camera)
-                cloudSyncManager.syncAll()
+                if (activeSiteId != LOCAL_SITE_ID) cloudSyncManager.syncAll()
                 postSideEffect(AddCameraSideEffect.CameraUpdated)
             } else {
                 cameraRepository.addCamera(camera)
-                cloudSyncManager.syncAll()
+                if (activeSiteId != LOCAL_SITE_ID) cloudSyncManager.syncAll()
                 postSideEffect(AddCameraSideEffect.CameraAdded)
             }
         } catch (e: Exception) {

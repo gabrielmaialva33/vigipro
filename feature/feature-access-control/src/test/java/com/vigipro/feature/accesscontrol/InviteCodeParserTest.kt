@@ -67,8 +67,7 @@ class InviteCodeParserTest {
     @Test
     fun `extractCode handles mixed case URL`() {
         val result = InviteCodeParser.extractCode("https://VIGIPRO.app/invite/aBcDeF")
-        // Regex is case-sensitive on domain, so this won't match - returns raw
-        assertEquals("https://VIGIPRO.app/invite/aBcDeF", result)
+        assertEquals("aBcDeF", result)
     }
 
     @Test

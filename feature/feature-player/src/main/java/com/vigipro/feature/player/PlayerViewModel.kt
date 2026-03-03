@@ -1,6 +1,7 @@
 package com.vigipro.feature.player
 
 import android.net.Uri
+import android.util.Log
 import android.view.SurfaceView
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.SavedStateHandle
@@ -13,6 +14,7 @@ import com.vigipro.core.data.notification.CameraNotificationHelper
 import com.vigipro.core.data.preferences.UserPreferencesRepository
 import com.vigipro.core.data.recording.StreamRecorder
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.CloudRepository
 import com.vigipro.core.data.repository.EventRepository
 import com.vigipro.core.data.repository.PrivacyZoneRepository
 import com.vigipro.core.data.repository.WebhookRepository
@@ -67,6 +69,8 @@ data class PlayerState(
     val showAddWebhookDialog: Boolean = false,
     val isSubStream: Boolean = false,
     val retriedWithSubStream: Boolean = false,
+    val useVlcPlayer: Boolean = false,
+    val vlcRetried: Boolean = false,
     val patrolState: PatrolManager.PatrolState = PatrolManager.PatrolState(),
     val showPatrolSheet: Boolean = false,
     val privacyZones: List<PrivacyZone> = emptyList(),
@@ -84,12 +88,14 @@ sealed interface PlayerSideEffect {
     data object EnterPipMode : PlayerSideEffect
     data class ShareRecording(val file: java.io.File) : PlayerSideEffect
     data class SwitchToSubStream(val subStreamUrl: String) : PlayerSideEffect
+    data class SwitchToVlcPlayer(val rtspUrl: String) : PlayerSideEffect
 }
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val cameraRepository: CameraRepository,
+    private val cloudRepository: CloudRepository,
     private val ptzClient: OnvifPtzClient,
     private val preferencesRepository: UserPreferencesRepository,
     private val eventRepository: EventRepository,
@@ -133,18 +139,34 @@ class PlayerViewModel @Inject constructor(
     }
 
     private fun loadCamera() = intent {
-        val camera = cameraRepository.getCameraById(cameraId)
+        // Try local Room DB first
+        var camera = cameraRepository.getCameraById(cameraId)
+
+        // Fallback: try cloud demo cameras
         if (camera == null) {
-            reduce { state.copy(isLoading = false, errorMessage = "Camera nao encontrada") }
+            camera = cloudRepository.fetchDemoCameras()
+                .getOrNull()
+                ?.find { it.id == cameraId }
+        }
+
+        // Fallback: try public cameras catalog
+        if (camera == null) {
+            camera = cloudRepository.fetchPublicCameras()
+                .getOrNull()
+                ?.first?.find { it.id == cameraId }
+        }
+
+        if (camera == null) {
+            reduce { state.copy(isLoading = false, errorMessage = "Câmera não encontrada") }
         } else {
             reduce {
                 state.copy(
                     camera = camera,
                     isLoading = false,
-                    talkbackAvailable = camera.audioCapable,
+                    talkbackAvailable = camera.audioCapable && !camera.isDemo,
                 )
             }
-            if (camera.ptzCapable && camera.onvifAddress != null) {
+            if (camera.ptzCapable && camera.onvifAddress != null && !camera.isDemo) {
                 connectPtz(camera)
             }
         }
@@ -208,6 +230,7 @@ class PlayerViewModel @Inject constructor(
     // Controls
     fun onControlsTap() = intent {
         val newVisibility = !state.showControls
+        Log.d("PlayerVM", "onControlsTap: showControls ${ state.showControls } -> $newVisibility")
         reduce { state.copy(showControls = newVisibility) }
         if (newVisibility) scheduleControlsHide()
     }
@@ -394,7 +417,7 @@ class PlayerViewModel @Inject constructor(
                 password = "",
             )
             if (!connected) {
-                intent { postSideEffect(PlayerSideEffect.ShowSnackbar("Falha ao conectar audio bidirecional")) }
+                intent { postSideEffect(PlayerSideEffect.ShowSnackbar("Falha ao conectar áudio bidirecional")) }
                 return@launch
             }
             intent { reduce { state.copy(isTalkbackActive = true) } }
@@ -428,7 +451,16 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun onRetry() = intent {
-        reduce { state.copy(errorMessage = null, isBuffering = true) }
+        reduce {
+            state.copy(
+                errorMessage = null,
+                isBuffering = true,
+                useVlcPlayer = false,
+                vlcRetried = false,
+                retriedWithSubStream = false,
+                isSubStream = false,
+            )
+        }
     }
 
     // Recording
@@ -579,7 +611,24 @@ class PlayerViewModel @Inject constructor(
             )
         }
         postSideEffect(PlayerSideEffect.SwitchToSubStream(subUrl))
-        postSideEffect(PlayerSideEffect.ShowSnackbar("Qualidade reduzida para conexao estavel"))
+    }
+
+    fun onSwitchToVlc() = intent {
+        val camera = state.camera ?: return@intent
+        val rtspUrl = camera.rtspUrl ?: return@intent
+        reduce {
+            state.copy(
+                useVlcPlayer = true,
+                vlcRetried = true,
+                errorMessage = null,
+                isBuffering = true,
+            )
+        }
+        postSideEffect(PlayerSideEffect.SwitchToVlcPlayer(rtspUrl))
+    }
+
+    fun onVlcPlaybackError(message: String) = intent {
+        reduce { state.copy(isPlaying = false, isBuffering = false, errorMessage = message) }
     }
 
     fun onEnterPip() = intent {

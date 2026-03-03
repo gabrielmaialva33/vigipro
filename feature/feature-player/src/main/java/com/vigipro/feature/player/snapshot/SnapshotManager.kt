@@ -26,13 +26,26 @@ import kotlin.coroutines.resume
 class SnapshotManager(private val context: Context) {
 
     suspend fun captureFrame(
+        surfaceView: SurfaceView,
+        cameraName: String? = null,
+        watermarkEnabled: Boolean = true,
+    ): Uri? = captureFrameFromSurface(surfaceView, cameraName, watermarkEnabled)
+
+    suspend fun captureFrame(
         playerView: PlayerView,
         cameraName: String? = null,
         watermarkEnabled: Boolean = true,
     ): Uri? {
         val surfaceView = playerView.videoSurfaceView as? SurfaceView
             ?: return null
+        return captureFrameFromSurface(surfaceView, cameraName, watermarkEnabled)
+    }
 
+    private suspend fun captureFrameFromSurface(
+        surfaceView: SurfaceView,
+        cameraName: String?,
+        watermarkEnabled: Boolean,
+    ): Uri? {
         val width = surfaceView.width
         val height = surfaceView.height
         if (width <= 0 || height <= 0) return null

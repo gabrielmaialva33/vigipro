@@ -61,7 +61,7 @@ fun PlayerControlsOverlay(
     onTalkbackToggle: () -> Unit,
     onPipClick: () -> Unit,
     isRecording: Boolean,
-    recordingDurationMs: Long,
+    recordingDurationMs: () -> Long,
     onRecordClick: () -> Unit,
     isPatrolling: Boolean,
     onPatrolClick: () -> Unit,
@@ -170,7 +170,7 @@ fun PlayerControlsOverlay(
                             icon = {
                                 Icon(
                                     if (isDetectionActive) PhosphorIcons.Regular.Eye else PhosphorIcons.Regular.EyeSlash,
-                                    if (isDetectionActive) "Desativar deteccao" else "Ativar deteccao",
+                                    if (isDetectionActive) "Desativar detecção" else "Ativar detecção",
                                     tint = if (isDetectionActive) Color(0xFFFF9800) else Color.White,
                                 )
                             },
@@ -182,7 +182,7 @@ fun PlayerControlsOverlay(
                             icon = {
                                 Icon(
                                     if (isTalkbackActive) PhosphorIcons.Regular.Microphone else PhosphorIcons.Regular.MicrophoneSlash,
-                                    if (isTalkbackActive) "Audio bidirecional ativo" else "Ativar audio bidirecional",
+                                    if (isTalkbackActive) "Áudio bidirecional ativo" else "Ativar áudio bidirecional",
                                     tint = if (isTalkbackActive) Color(0xFFD32F2F) else Color.White,
                                 )
                             },
@@ -193,7 +193,7 @@ fun PlayerControlsOverlay(
                         icon = {
                             Icon(
                                 PhosphorIcons.Regular.Shield,
-                                "Mascaras de privacidade",
+                                "Máscaras de privacidade",
                                 tint = if (hasPrivacyZones) Color(0xFF7C4DFF) else Color.White,
                             )
                         },
@@ -205,7 +205,7 @@ fun PlayerControlsOverlay(
                         icon = {
                             Icon(
                                 if (isAudioEnabled) PhosphorIcons.Regular.SpeakerHigh else PhosphorIcons.Regular.SpeakerSlash,
-                                if (isAudioEnabled) "Desativar audio" else "Ativar audio",
+                                if (isAudioEnabled) "Desativar áudio" else "Ativar áudio",
                                 tint = Color.White,
                             )
                         },
@@ -243,10 +243,10 @@ fun PlayerControlsOverlay(
 
 @Composable
 private fun RecordingIndicator(
-    recordingDurationMs: Long,
+    recordingDurationMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
-    val totalSeconds = (recordingDurationMs / 1000).toInt()
+    val totalSeconds = (recordingDurationMs() / 1000).toInt()
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     val timerText = String.format("%02d:%02d", minutes, seconds)

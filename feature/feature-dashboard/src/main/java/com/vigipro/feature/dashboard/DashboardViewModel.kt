@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.vigipro.core.data.monitor.CameraStatusMonitor
 import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.CameraRepository
+import com.vigipro.core.data.repository.CloudRepository
 import com.vigipro.core.data.repository.SiteRepository
 import com.vigipro.core.data.seed.DevSeedHelper
 import com.vigipro.core.data.sync.CloudSyncManager
+import com.vigipro.core.data.sync.LocalCameraMigrator
 import com.vigipro.core.model.Camera
+import kotlinx.coroutines.flow.first
 import com.vigipro.core.model.Site
 import com.vigipro.core.ui.components.GridLayout
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,13 +21,16 @@ import javax.inject.Inject
 
 data class DashboardState(
     val cameras: List<Camera> = emptyList(),
+    val demoCameras: List<Camera> = emptyList(),
     val sites: List<Site> = emptyList(),
     val selectedSiteId: String? = null,
     val gridLayout: GridLayout = GridLayout.GRID_2X2,
     val isLoading: Boolean = true,
     val cameraToDelete: Camera? = null,
     val userEmail: String? = null,
-)
+) {
+    val allCameras: List<Camera> get() = cameras + demoCameras
+}
 
 sealed interface DashboardSideEffect {
     data class NavigateToPlayer(val cameraId: String) : DashboardSideEffect
@@ -36,6 +42,7 @@ sealed interface DashboardSideEffect {
     data object NavigateToMultiview : DashboardSideEffect
     data object NavigateToRecordings : DashboardSideEffect
     data object NavigateToAlertDigest : DashboardSideEffect
+    data object NavigateToSites : DashboardSideEffect
 }
 
 @HiltViewModel
@@ -44,14 +51,18 @@ class DashboardViewModel @Inject constructor(
     private val siteRepository: SiteRepository,
     private val statusMonitor: CameraStatusMonitor,
     private val authRepository: AuthRepository,
+    private val cloudRepository: CloudRepository,
     private val devSeedHelper: DevSeedHelper,
     private val cloudSyncManager: CloudSyncManager,
+    private val localCameraMigrator: LocalCameraMigrator,
 ) : ViewModel(), ContainerHost<DashboardState, DashboardSideEffect> {
 
     override val container = viewModelScope.container<DashboardState, DashboardSideEffect>(DashboardState()) {
         observeSites()
         devSeedHelper.seedIfEmpty()
+        migrateLocalCamerasIfNeeded()
         observeCameras()
+        loadDemoCameras()
         loadUserInfo()
         statusMonitor.start(viewModelScope)
         syncToCloud()
@@ -59,6 +70,25 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadUserInfo() = intent {
         reduce { state.copy(userEmail = authRepository.currentUserEmail) }
+    }
+
+    private fun loadDemoCameras() = intent {
+        cloudRepository.fetchDemoCameras()
+            .onSuccess { demos ->
+                reduce { state.copy(demoCameras = demos) }
+            }
+    }
+
+    private fun migrateLocalCamerasIfNeeded() = intent {
+        try {
+            if (!localCameraMigrator.hasLocalCameras()) return@intent
+            val firstSite = siteRepository.getUserSites()
+                .first()
+                .firstOrNull() ?: return@intent
+            localCameraMigrator.migrateLocalCameras(firstSite.id)
+        } catch (_: Exception) {
+            // Migration is best-effort
+        }
     }
 
     private fun syncToCloud() = intent {
@@ -151,5 +181,9 @@ class DashboardViewModel @Inject constructor(
 
     fun onAlertDigestClick() = intent {
         postSideEffect(DashboardSideEffect.NavigateToAlertDigest)
+    }
+
+    fun onSitesClick() = intent {
+        postSideEffect(DashboardSideEffect.NavigateToSites)
     }
 }

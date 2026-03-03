@@ -1,5 +1,6 @@
 package com.vigipro.feature.accesscontrol
 
+import androidx.lifecycle.SavedStateHandle
 import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.AuthSessionState
 import com.vigipro.core.data.repository.InvitationRepository
@@ -130,7 +131,12 @@ class AccessControlViewModelTest {
         authRepo = FakeAuthRepository()
     }
 
-    private fun createViewModel() = AccessControlViewModel(siteRepo, invRepo, authRepo)
+    private fun createViewModel(redeemCode: String? = null): AccessControlViewModel {
+        val handle = SavedStateHandle().apply {
+            if (redeemCode != null) set("code", redeemCode)
+        }
+        return AccessControlViewModel(handle, siteRepo, invRepo, authRepo)
+    }
 
     // --- Initial state ---
 
@@ -234,6 +240,19 @@ class AccessControlViewModelTest {
     }
 
     @Test
+    fun `onShowCreateInvite with no site shows error snackbar`() = runTest {
+        val noSiteState = loadedState.copy(selectedSiteId = null)
+        val vm = createViewModel()
+        vm.test(this, initialState = noSiteState) {
+            expectInitialState()
+            containerHost.onShowCreateInvite()
+            expectSideEffect(
+                AccessControlSideEffect.ShowSnackbar("Selecione um local primeiro"),
+            )
+        }
+    }
+
+    @Test
     fun `onDismissCreateInvite closes sheet`() = runTest {
         val vm = createViewModel()
         vm.test(this, initialState = loadedState.copy(showCreateInvite = true)) {
@@ -288,12 +307,15 @@ class AccessControlViewModelTest {
     }
 
     @Test
-    fun `onCreateInvite with no selected site does nothing`() = runTest {
+    fun `onCreateInvite with no selected site shows error snackbar`() = runTest {
         val noSiteState = loadedState.copy(selectedSiteId = null)
         val vm = createViewModel()
         vm.test(this, initialState = noSiteState) {
             expectInitialState()
             containerHost.onCreateInvite()
+            expectSideEffect(
+                AccessControlSideEffect.ShowSnackbar("Selecione um local primeiro"),
+            )
         }
     }
 
@@ -389,7 +411,7 @@ class AccessControlViewModelTest {
     }
 
     @Test
-    fun `onRedeemInvite failure shows error and stops loading`() = runTest {
+    fun `onRedeemInvite failure shows specific error message`() = runTest {
         invRepo.redeemResult = Result.failure(RuntimeException("Convite nao encontrado"))
 
         val readyState = loadedState.copy(redeemCode = "INVALID")
@@ -400,7 +422,7 @@ class AccessControlViewModelTest {
             expectState { copy(isRedeeming = true) }
             expectState { copy(isRedeeming = false) }
             expectSideEffect(
-                AccessControlSideEffect.ShowSnackbar("Erro ao resgatar convite. Verifique o codigo"),
+                AccessControlSideEffect.ShowSnackbar("Convite nao encontrado"),
             )
         }
     }

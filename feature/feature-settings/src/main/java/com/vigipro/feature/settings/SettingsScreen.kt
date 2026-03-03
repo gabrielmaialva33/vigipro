@@ -57,7 +57,7 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = viewModel::onClearCacheDismiss,
             title = { Text("Limpar cache") },
-            text = { Text("Todas as preferencias serao redefinidas para os valores padrao. Deseja continuar?") },
+            text = { Text("Todas as preferências serão redefinidas para os valores padrão. Deseja continuar?") },
             confirmButton = {
                 TextButton(onClick = viewModel::onClearCacheConfirm) {
                     Text("Limpar", color = MaterialTheme.colorScheme.error)
@@ -75,7 +75,7 @@ fun SettingsScreen(
         modifier = modifier,
         topBar = {
             VigiProTopBar(
-                title = "Configuracoes",
+                title = "Configurações",
                 onBackClick = viewModel::onBack,
             )
         },
@@ -101,11 +101,11 @@ fun SettingsScreen(
                 SettingsSection(title = "CONTA") {
                     SettingsInfoItem(
                         title = "Email",
-                        value = state.userEmail ?: "Nao conectado",
+                        value = state.userEmail ?: "Não conectado",
                     )
                     SettingsActionItem(
                         title = "Sair da conta",
-                        subtitle = "Encerrar sessao e voltar para tela de login",
+                        subtitle = "Encerrar sessão e voltar para tela de login",
                         onClick = viewModel::onLogout,
                         destructive = true,
                     )
@@ -116,7 +116,7 @@ fun SettingsScreen(
                 // Video
                 SettingsSection(title = "VIDEO") {
                     SettingsDropdownItem(
-                        title = "Qualidade padrao",
+                        title = "Qualidade padrão",
                         currentValue = state.preferences.videoQuality,
                         options = VideoQuality.entries,
                         onValueChange = viewModel::onVideoQualityChange,
@@ -129,14 +129,14 @@ fun SettingsScreen(
                         },
                     )
                     SettingsToggleItem(
-                        title = "Audio habilitado por padrao",
-                        subtitle = "Ativar audio automaticamente ao abrir o player",
+                        title = "Áudio habilitado por padrão",
+                        subtitle = "Ativar áudio automaticamente ao abrir o player",
                         checked = state.preferences.audioEnabledByDefault,
                         onCheckedChange = viewModel::onAudioEnabledChange,
                     )
                     SettingsToggleItem(
-                        title = "Mascaras de privacidade",
-                        subtitle = "Exibir zonas de privacidade sobre o video",
+                        title = "Máscaras de privacidade",
+                        subtitle = "Exibir zonas de privacidade sobre o vídeo",
                         checked = state.preferences.privacyMaskingEnabled,
                         onCheckedChange = viewModel::onPrivacyMaskingEnabledChange,
                     )
@@ -147,7 +147,7 @@ fun SettingsScreen(
                 // Interface
                 SettingsSection(title = "INTERFACE") {
                     SettingsDropdownItem(
-                        title = "Layout padrao da grade",
+                        title = "Layout padrão da grade",
                         currentValue = state.preferences.defaultGridColumns,
                         options = listOf(1, 2, 3, 4),
                         onValueChange = viewModel::onDefaultGridColumnsChange,
@@ -181,8 +181,8 @@ fun SettingsScreen(
                 // Monitoramento
                 SettingsSection(title = "MONITORAMENTO") {
                     SettingsDropdownItem(
-                        title = "Intervalo de verificacao",
-                        subtitle = "Frequencia da checagem de status das cameras",
+                        title = "Intervalo de verificação",
+                        subtitle = "Frequência da checagem de status das câmeras",
                         currentValue = state.preferences.statusMonitorIntervalMs,
                         options = listOf(30_000L, 60_000L, 300_000L, 600_000L),
                         onValueChange = viewModel::onMonitorIntervalChange,
@@ -197,14 +197,14 @@ fun SettingsScreen(
                         },
                     )
                     SettingsToggleItem(
-                        title = "Notificar camera offline",
-                        subtitle = "Receber alerta quando uma camera perder conexao",
+                        title = "Notificar câmera offline",
+                        subtitle = "Receber alerta quando uma câmera perder conexão",
                         checked = state.preferences.notifyOffline,
                         onCheckedChange = viewModel::onNotifyOfflineChange,
                     )
                     SettingsToggleItem(
-                        title = "Notificar camera restaurada",
-                        subtitle = "Receber alerta quando uma camera voltar a funcionar",
+                        title = "Notificar câmera restaurada",
+                        subtitle = "Receber alerta quando uma câmera voltar a funcionar",
                         checked = state.preferences.notifyOnline,
                         onCheckedChange = viewModel::onNotifyOnlineChange,
                     )
@@ -215,8 +215,8 @@ fun SettingsScreen(
                 // Resumo de Alertas
                 SettingsSection(title = "RESUMO DE ALERTAS") {
                     SettingsToggleItem(
-                        title = "Resumo periodico",
-                        subtitle = "Agrupar notificacoes em resumos periodicos",
+                        title = "Resumo periódico",
+                        subtitle = "Agrupar notificações em resumos periódicos",
                         checked = state.preferences.alertDigestEnabled,
                         onCheckedChange = viewModel::onAlertDigestEnabledChange,
                     )
@@ -237,15 +237,15 @@ fun SettingsScreen(
                             },
                         )
                         SettingsDropdownItem(
-                            title = "Horario silencioso - inicio",
-                            subtitle = "Nao enviar resumos a partir deste horario",
+                            title = "Horário silencioso - inicio",
+                            subtitle = "Não enviar resumos a partir deste horário",
                             currentValue = state.preferences.alertDigestQuietHoursStart,
                             options = listOf(20, 21, 22, 23),
                             onValueChange = viewModel::onAlertDigestQuietStartChange,
                             displayMapper = { hour -> "${hour}:00" },
                         )
                         SettingsDropdownItem(
-                            title = "Horario silencioso - fim",
+                            title = "Horário silencioso - fim",
                             currentValue = state.preferences.alertDigestQuietHoursEnd,
                             options = listOf(5, 6, 7, 8),
                             onValueChange = viewModel::onAlertDigestQuietEndChange,
@@ -259,15 +259,15 @@ fun SettingsScreen(
                 // Geofencing
                 SettingsSection(title = "GEOFENCING") {
                     SettingsToggleItem(
-                        title = "Auto-armar por localizacao",
-                        subtitle = "Ativar/desativar deteccao automaticamente ao sair/chegar em um site",
+                        title = "Auto-armar por localização",
+                        subtitle = "Ativar/desativar detecção automaticamente ao sair/chegar em um site",
                         checked = state.preferences.geofencingEnabled,
                         onCheckedChange = viewModel::onGeofencingEnabledChange,
                     )
                     if (state.preferences.geofencingEnabled) {
                         SettingsDropdownItem(
                             title = "Raio do geofence",
-                            subtitle = "Distancia do site para acionar a deteccao",
+                            subtitle = "Distância do site para acionar a detecção",
                             currentValue = state.preferences.defaultGeofenceRadius,
                             options = listOf(100f, 200f, 500f, 1000f),
                             onValueChange = viewModel::onGeofenceRadiusChange,
@@ -286,18 +286,18 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
-                // Deteccao Inteligente
-                SettingsSection(title = "DETECCAO INTELIGENTE") {
+                // Detecção Inteligente
+                SettingsSection(title = "DETECÇÃO INTELIGENTE") {
                     SettingsToggleItem(
-                        title = "Deteccao de objetos",
-                        subtitle = "Ativar deteccao por IA no player de video",
+                        title = "Detecção de objetos",
+                        subtitle = "Ativar detecção por IA no player de vídeo",
                         checked = state.preferences.detectionEnabled,
                         onCheckedChange = viewModel::onDetectionEnabledChange,
                     )
                     if (state.preferences.detectionEnabled) {
                         SettingsDropdownItem(
                             title = "Sensibilidade",
-                            subtitle = "Nivel de confianca minimo para deteccao",
+                            subtitle = "Nível de confiança mínimo para detecção",
                             currentValue = state.preferences.detectionConfidenceThreshold,
                             options = listOf(0.3f, 0.5f, 0.7f, 0.85f),
                             onValueChange = viewModel::onDetectionConfidenceChange,
@@ -306,7 +306,7 @@ fun SettingsScreen(
                             },
                         )
                         SettingsDropdownItem(
-                            title = "Frequencia de analise",
+                            title = "Frequência de análise",
                             subtitle = "Intervalo entre cada analise de frame",
                             currentValue = state.preferences.detectionIntervalMs,
                             options = listOf(500L, 750L, 1000L, 1500L),
@@ -314,7 +314,7 @@ fun SettingsScreen(
                             displayMapper = { ms ->
                                 when (ms) {
                                     500L -> "500ms (rapido)"
-                                    750L -> "750ms (padrao)"
+                                    750L -> "750ms (padrão)"
                                     1000L -> "1 segundo"
                                     1500L -> "1.5 segundos"
                                     else -> "${ms}ms"
@@ -348,10 +348,10 @@ fun SettingsScreen(
                 HorizontalDivider()
 
                 // Audio bidirecional
-                SettingsSection(title = "AUDIO BIDIRECIONAL") {
+                SettingsSection(title = "ÁUDIO BIDIRECIONAL") {
                     SettingsToggleItem(
                         title = "Talkback (push-to-talk)",
-                        subtitle = "Habilitar botao de audio bidirecional no player",
+                        subtitle = "Habilitar botão de áudio bidirecional no player",
                         checked = state.preferences.talkbackEnabled,
                         onCheckedChange = viewModel::onTalkbackEnabledChange,
                     )
@@ -360,10 +360,10 @@ fun SettingsScreen(
                 HorizontalDivider()
 
                 // Seguranca
-                SettingsSection(title = "SEGURANCA") {
+                SettingsSection(title = "SEGURANÇA") {
                     SettingsToggleItem(
-                        title = "Bloqueio biometrico",
-                        subtitle = "Exigir autenticacao ao abrir o app",
+                        title = "Bloqueio biométrico",
+                        subtitle = "Exigir autenticação ao abrir o app",
                         checked = state.preferences.biometricLockEnabled,
                         onCheckedChange = viewModel::onBiometricLockEnabledChange,
                     )
@@ -375,7 +375,7 @@ fun SettingsScreen(
                 SettingsSection(title = "CAPTURAS") {
                     SettingsToggleItem(
                         title = "Marca d'agua em capturas",
-                        subtitle = "Adicionar nome da camera e horario nas capturas",
+                        subtitle = "Adicionar nome da câmera e horário nas capturas",
                         checked = state.preferences.watermarkEnabled,
                         onCheckedChange = viewModel::onWatermarkEnabledChange,
                     )
@@ -391,7 +391,7 @@ fun SettingsScreen(
                     )
                     SettingsActionItem(
                         title = "Limpar cache",
-                        subtitle = "Remove dados temporarios e preferencias",
+                        subtitle = "Remove dados temporários e preferências",
                         onClick = viewModel::onClearCacheRequest,
                         destructive = true,
                     )
@@ -402,7 +402,7 @@ fun SettingsScreen(
                 // Sobre
                 SettingsSection(title = "SOBRE") {
                     SettingsInfoItem(
-                        title = "Versao do app",
+                        title = "Versão do app",
                         value = "1.0.0",
                     )
                 }

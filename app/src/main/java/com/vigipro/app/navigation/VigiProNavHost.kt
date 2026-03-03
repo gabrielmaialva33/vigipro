@@ -8,14 +8,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.google.firebase.auth.FirebaseAuth
 import com.vigipro.feature.accesscontrol.AccessControlScreen
 import com.vigipro.feature.auth.LoginScreen
+import com.vigipro.feature.discover.DiscoverScreen
 import com.vigipro.feature.dashboard.AlertDigestScreen
 import com.vigipro.feature.dashboard.DashboardScreen
 import com.vigipro.feature.dashboard.EventTimelineScreen
@@ -25,6 +28,7 @@ import com.vigipro.feature.player.multiview.MultiviewScreen
 import com.vigipro.feature.player.recordings.PlaybackScreen
 import com.vigipro.feature.player.recordings.RecordingsScreen
 import com.vigipro.feature.settings.SettingsScreen
+import com.vigipro.feature.sites.SitesScreen
 
 private const val ANIM_DURATION = 350
 private val animEasing = FastOutSlowInEasing
@@ -33,9 +37,15 @@ private val animEasing = FastOutSlowInEasing
 fun VigiProNavHost() {
     val navController = rememberNavController()
 
+    // FirebaseAuth.currentUser is synchronous — reads from local cache
+    // If user was previously logged in, skip discover and go straight to dashboard
+    val startDestination = remember {
+        if (FirebaseAuth.getInstance().currentUser != null) "dashboard" else "discover"
+    }
+
     NavHost(
         navController = navController,
-        startDestination = "login",
+        startDestination = startDestination,
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Start,
@@ -63,6 +73,26 @@ fun VigiProNavHost() {
             ) + fadeOut(animationSpec = tween(ANIM_DURATION / 2))
         },
     ) {
+        // Discover — home screen sem login
+        composable(
+            route = "discover",
+            enterTransition = { fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.92f) },
+            exitTransition = { fadeOut(tween(300)) + scaleOut(tween(300), targetScale = 1.08f) },
+            popEnterTransition = { fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.92f) },
+        ) {
+            DiscoverScreen(
+                onNavigateToPlayer = { cameraId ->
+                    navController.navigate("player/$cameraId")
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login")
+                },
+                onNavigateToAddCamera = {
+                    navController.navigate("add_camera")
+                },
+            )
+        }
+
         // Login — fade + scale (special transition)
         composable(
             route = "login",
@@ -72,7 +102,7 @@ fun VigiProNavHost() {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("dashboard") {
-                        popUpTo("login") { inclusive = true }
+                        popUpTo("discover") { inclusive = true }
                     }
                 },
             )
@@ -94,6 +124,9 @@ fun VigiProNavHost() {
                 },
                 onNavigateToAccessControl = {
                     navController.navigate("access_control")
+                },
+                onNavigateToSites = {
+                    navController.navigate("sites")
                 },
                 onNavigateToEventTimeline = {
                     navController.navigate("event_timeline")
@@ -163,7 +196,7 @@ fun VigiProNavHost() {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onLogout = {
-                    navController.navigate("login") {
+                    navController.navigate("discover") {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -202,9 +235,16 @@ fun VigiProNavHost() {
             )
         }
 
+        composable("sites") {
+            SitesScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
         composable("access_control") {
             AccessControlScreen(
                 onBack = { navController.popBackStack() },
+                onNavigateToSites = { navController.navigate("sites") },
             )
         }
 
@@ -217,6 +257,7 @@ fun VigiProNavHost() {
         ) {
             AccessControlScreen(
                 onBack = { navController.popBackStack() },
+                onNavigateToSites = { navController.navigate("sites") },
             )
         }
     }

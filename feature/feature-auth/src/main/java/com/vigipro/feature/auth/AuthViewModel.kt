@@ -6,6 +6,7 @@ import com.vigipro.core.data.repository.AuthRepository
 import com.vigipro.core.data.repository.AuthSessionState
 import com.vigipro.core.data.repository.SiteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.container
 import javax.inject.Inject
@@ -45,14 +46,12 @@ class AuthViewModel @Inject constructor(
                     // Sync sites on auth
                     try {
                         siteRepository.syncSites()
-                        // Auto-create default site if user has none
-                        siteRepository.getUserSites().collect { sites ->
-                            if (sites.isEmpty()) {
-                                siteRepository.createSite("Meu Local", null)
-                            }
-                            postSideEffect(AuthSideEffect.NavigateToDashboard)
-                            return@collect
+                        // Get sites to check if we need to create a default one
+                        val sites = siteRepository.getUserSites().first()
+                        if (sites.isEmpty()) {
+                            siteRepository.createSite("Meu Local", null)
                         }
+                        postSideEffect(AuthSideEffect.NavigateToDashboard)
                     } catch (_: Exception) {
                         postSideEffect(AuthSideEffect.NavigateToDashboard)
                     }
@@ -115,7 +114,7 @@ class AuthViewModel @Inject constructor(
                     "Este email ja esta cadastrado"
                 msg.contains("USER_NOT_FOUND", ignoreCase = true) ||
                     msg.contains("no user record", ignoreCase = true) ->
-                    "Email nao cadastrado"
+                    "Email não cadastrado"
                 msg.contains("WEAK_PASSWORD", ignoreCase = true) ||
                     msg.contains("weak_password", ignoreCase = true) ->
                     "Senha muito fraca. Use no minimo 6 caracteres"
@@ -128,8 +127,8 @@ class AuthViewModel @Inject constructor(
                 msg.contains("network", ignoreCase = true) ||
                     msg.contains("timeout", ignoreCase = true) ||
                     msg.contains("Unable to resolve", ignoreCase = true) ->
-                    "Sem conexao com o servidor. Verifique sua internet"
-                else -> "Erro de autenticacao. Tente novamente"
+                    "Sem conexão com o servidor. Verifique sua internet"
+                else -> "Erro de autenticação. Tente novamente"
             }
             reduce { state.copy(isLoading = false, errorMessage = message) }
         }
@@ -143,7 +142,7 @@ class AuthViewModel @Inject constructor(
         authRepository.signInWithGoogle(idToken).onFailure { error ->
             val message = when {
                 error.message.orEmpty().contains("network", ignoreCase = true) ->
-                    "Sem conexao. Verifique sua internet"
+                    "Sem conexão. Verifique sua internet"
                 else -> "Erro ao entrar com Google. Tente novamente"
             }
             reduce { state.copy(isGoogleLoading = false, errorMessage = message) }

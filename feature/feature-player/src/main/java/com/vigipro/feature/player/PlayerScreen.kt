@@ -29,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,8 +53,13 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.ui.PlayerView
+import com.vigipro.core.model.PatrolRoute
+import com.vigipro.core.model.PrivacyZone
+import com.vigipro.core.model.WebhookAction
 import com.vigipro.core.ui.components.ErrorState
 import com.vigipro.core.ui.components.LoadingIndicator
 import com.vigipro.core.ui.components.VigiProTopBar
@@ -70,11 +76,47 @@ import com.vigipro.feature.player.ui.PtzControlPad
 import com.vigipro.feature.player.ui.StreamInfoOverlay
 import com.vigipro.feature.player.util.FullscreenHelper
 import com.vigipro.feature.player.util.findActivity
+import com.vigipro.feature.player.vlc.VlcPlayerWrapper
+import com.vigipro.feature.player.vlc.VlcVideoSurface
 import com.vigipro.feature.player.webhook.AddWebhookDialog
 import com.vigipro.feature.player.webhook.WebhookButton
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
+
+@Stable
+class PlayerActions(
+    val onControlsTap: () -> Unit,
+    val onToggleFullscreen: () -> Unit,
+    val onBack: () -> Unit,
+    val setSurfaceView: (SurfaceView?) -> Unit,
+    val onPlayPause: () -> Unit,
+    val onToggleAudio: () -> Unit,
+    val onSnapshot: () -> Unit,
+    val onTogglePtzControls: () -> Unit,
+    val onToggleStreamInfo: () -> Unit,
+    val onToggleDetection: () -> Unit,
+    val onPtzMove: (Float, Float, Float) -> Unit,
+    val onPtzStop: () -> Unit,
+    val onPtzPreset: (String) -> Unit,
+    val onToggleRecording: () -> Unit,
+    val onEnterPip: () -> Unit,
+    val onTalkbackPress: () -> Unit,
+    val onTalkbackRelease: () -> Unit,
+    val onAddPrivacyZone: (Float, Float, Float, Float) -> Unit,
+    val onDeletePrivacyZone: (PrivacyZone) -> Unit,
+    val onTogglePrivacyZoneEditor: () -> Unit,
+    val onExecuteWebhook: (WebhookAction) -> Unit,
+    val onShowAddWebhook: () -> Unit,
+    val onDismissAddWebhook: () -> Unit,
+    val onDeleteWebhook: (String) -> Unit,
+    val onSaveWebhook: (WebhookAction) -> Unit,
+    val onShowPatrolSheet: () -> Unit,
+    val onDismissPatrolSheet: () -> Unit,
+    val onStartPatrol: (PatrolRoute) -> Unit,
+    val onStopPatrol: () -> Unit,
+    val onRetry: () -> Unit,
+)
 
 @OptIn(UnstableApi::class)
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
@@ -90,10 +132,48 @@ fun PlayerScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val snapshotManager = remember { SnapshotManager(context) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+    var vlcPlayer by remember { mutableStateOf<VlcPlayerWrapper?>(null) }
+    var vlcSurfaceViewRef by remember { mutableStateOf<SurfaceView?>(null) }
 
     // Detect PiP mode
     val activity = context.findActivity()
     var isInPipMode by remember { mutableStateOf(false) }
+
+    // Build stable actions wrapper — created once per viewModel instance
+    val actions = remember(viewModel) {
+        PlayerActions(
+            onControlsTap = viewModel::onControlsTap,
+            onToggleFullscreen = viewModel::onToggleFullscreen,
+            onBack = viewModel::onBack,
+            setSurfaceView = viewModel::setSurfaceView,
+            onPlayPause = viewModel::onPlayPause,
+            onToggleAudio = viewModel::onToggleAudio,
+            onSnapshot = viewModel::onSnapshot,
+            onTogglePtzControls = viewModel::onTogglePtzControls,
+            onToggleStreamInfo = viewModel::onToggleStreamInfo,
+            onToggleDetection = viewModel::onToggleDetection,
+            onPtzMove = viewModel::onPtzMove,
+            onPtzStop = viewModel::onPtzStop,
+            onPtzPreset = viewModel::onPtzPreset,
+            onToggleRecording = viewModel::onToggleRecording,
+            onEnterPip = viewModel::onEnterPip,
+            onTalkbackPress = viewModel::onTalkbackPress,
+            onTalkbackRelease = viewModel::onTalkbackRelease,
+            onAddPrivacyZone = viewModel::onAddPrivacyZone,
+            onDeletePrivacyZone = viewModel::onDeletePrivacyZone,
+            onTogglePrivacyZoneEditor = viewModel::onTogglePrivacyZoneEditor,
+            onExecuteWebhook = viewModel::onExecuteWebhook,
+            onShowAddWebhook = viewModel::onShowAddWebhook,
+            onDismissAddWebhook = viewModel::onDismissAddWebhook,
+            onDeleteWebhook = viewModel::onDeleteWebhook,
+            onSaveWebhook = viewModel::onSaveWebhook,
+            onShowPatrolSheet = viewModel::onShowPatrolSheet,
+            onDismissPatrolSheet = viewModel::onDismissPatrolSheet,
+            onStartPatrol = viewModel::onStartPatrol,
+            onStopPatrol = viewModel::onStopPatrol,
+            onRetry = viewModel::onRetry,
+        )
+    }
 
     // Track PiP mode changes via lifecycle
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -150,11 +230,20 @@ fun PlayerScreen(
             }
             PlayerSideEffect.RequestSnapshot -> {
                 scope.launch {
-                    val uri = playerViewRef?.let {
-                        snapshotManager.captureFrame(
-                            playerView = it,
-                            cameraName = state.camera?.name,
-                        )
+                    val uri = if (state.useVlcPlayer) {
+                        vlcSurfaceViewRef?.let {
+                            snapshotManager.captureFrame(
+                                surfaceView = it,
+                                cameraName = state.camera?.name,
+                            )
+                        }
+                    } else {
+                        playerViewRef?.let {
+                            snapshotManager.captureFrame(
+                                playerView = it,
+                                cameraName = state.camera?.name,
+                            )
+                        }
                     }
                     if (uri != null) {
                         viewModel.onSnapshotSaved(uri)
@@ -207,6 +296,18 @@ fun PlayerScreen(
                 exoPlayer.prepare()
                 exoPlayer.playWhenReady = true
             }
+            is PlayerSideEffect.SwitchToVlcPlayer -> {
+                exoPlayer.stop()
+                exoPlayer.clearMediaItems()
+                val vlc = vlcPlayer ?: VlcPlayerWrapper(context).also { vlcPlayer = it }
+                vlc.onPlaybackStarted = { viewModel.onPlaybackStarted() }
+                vlc.onBuffering = { viewModel.onBuffering() }
+                vlc.onError = { msg -> viewModel.onVlcPlaybackError(msg) }
+                vlc.onVideoInfo = { codec, w, h ->
+                    viewModel.onVideoInfoAvailable(codec = codec, resolution = "${w}x${h}")
+                }
+                // Playback starts when VlcVideoSurface composes and attaches
+            }
         }
     }
 
@@ -217,10 +318,9 @@ fun PlayerScreen(
                 Lifecycle.Event.ON_PAUSE -> {
                     val inPip = activity?.isInPictureInPictureMode == true
                     if (!inPip) {
-                        // Normal pause: stop everything
                         exoPlayer.pause()
+                        vlcPlayer?.pause()
                     }
-                    // Always stop detection, talkback, and recording (even in PiP)
                     viewModel.stopDetection()
                     viewModel.onTalkbackRelease()
                     if (state.isRecording) {
@@ -228,7 +328,9 @@ fun PlayerScreen(
                     }
                 }
                 Lifecycle.Event.ON_RESUME -> {
-                    if (exoPlayer.playbackState != Player.STATE_IDLE) {
+                    if (state.useVlcPlayer) {
+                        vlcPlayer?.resume()
+                    } else if (exoPlayer.playbackState != Player.STATE_IDLE) {
                         exoPlayer.play()
                     }
                 }
@@ -239,26 +341,39 @@ fun PlayerScreen(
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             exoPlayer.release()
+            vlcPlayer?.release()
         }
     }
 
-    // Set RTSP media source with TCP and timeout
-    LaunchedEffect(state.camera?.rtspUrl) {
-        val rtspUrl = state.camera?.rtspUrl ?: return@LaunchedEffect
+    // Set media source — HLS for cloud cameras, RTSP for local cameras
+    LaunchedEffect(state.camera?.hlsUrl, state.camera?.rtspUrl) {
+        val camera = state.camera ?: return@LaunchedEffect
 
-        val rtspMediaSource = RtspMediaSource.Factory()
-            .setForceUseRtpTcp(true)
-            .setTimeoutMs(10_000L)
-            .createMediaSource(MediaItem.fromUri(rtspUrl))
+        val mediaSource = when {
+            camera.hlsUrl != null -> {
+                HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
+                    .createMediaSource(MediaItem.fromUri(camera.hlsUrl!!))
+            }
+            camera.rtspUrl != null -> {
+                RtspMediaSource.Factory()
+                    .setTimeoutMs(10_000L)
+                    .createMediaSource(MediaItem.fromUri(camera.rtspUrl!!))
+            }
+            else -> return@LaunchedEffect
+        }
 
-        exoPlayer.setMediaSource(rtspMediaSource)
+        exoPlayer.setMediaSource(mediaSource)
         exoPlayer.prepare()
         exoPlayer.playWhenReady = true
     }
 
     // Audio volume sync
-    LaunchedEffect(state.isAudioEnabled) {
-        exoPlayer.volume = if (state.isAudioEnabled) 1f else 0f
+    LaunchedEffect(state.isAudioEnabled, state.useVlcPlayer) {
+        if (state.useVlcPlayer) {
+            vlcPlayer?.setVolume(if (state.isAudioEnabled) 100 else 0)
+        } else {
+            exoPlayer.volume = if (state.isAudioEnabled) 1f else 0f
+        }
     }
 
     // Listen to player events
@@ -273,12 +388,20 @@ fun PlayerScreen(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                if (!state.retriedWithSubStream) {
-                    viewModel.onSwitchToSubStream()
-                } else {
-                    viewModel.onPlaybackError(
-                        error.localizedMessage ?: "Erro de reproducao",
-                    )
+                when {
+                    !state.retriedWithSubStream -> viewModel.onSwitchToSubStream()
+                    !state.vlcRetried && state.camera?.rtspUrl != null -> viewModel.onSwitchToVlc()
+                    else -> {
+                        val message = when (error.errorCode) {
+                            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+                            -> "Falha na conexão com a câmera"
+                            PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW,
+                            -> "Transmissão ao vivo interrompida"
+                            else -> "Erro ao reproduzir vídeo"
+                        }
+                        viewModel.onPlaybackError(message)
+                    }
                 }
             }
 
@@ -298,7 +421,7 @@ fun PlayerScreen(
     val onTalkbackToggle: () -> Unit = {
         if (state.hasMicPermission) {
             scope.launch {
-                snackbarHostState.showSnackbar("Segure o botao de microfone para falar")
+                snackbarHostState.showSnackbar("Segure o botão de microfone para falar")
             }
         } else {
             micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -308,17 +431,22 @@ fun PlayerScreen(
     if (isInPipMode) {
         // PiP mode: video only, no controls or UI chrome
         PipPlayerContent(
+            state = state,
             exoPlayer = exoPlayer,
-            viewModel = viewModel,
+            vlcPlayer = vlcPlayer,
+            setSurfaceView = actions.setSurfaceView,
             onPlayerViewCreated = { playerViewRef = it },
+            onVlcSurfaceReady = { vlcSurfaceViewRef = it },
         )
     } else if (state.isFullscreen) {
         FullscreenPlayerContent(
             state = state,
             exoPlayer = exoPlayer,
+            vlcPlayer = vlcPlayer,
             snackbarHostState = snackbarHostState,
-            viewModel = viewModel,
+            actions = actions,
             onPlayerViewCreated = { playerViewRef = it },
+            onVlcSurfaceReady = { vlcSurfaceViewRef = it },
             onTalkbackToggle = onTalkbackToggle,
         )
     } else {
@@ -327,7 +455,7 @@ fun PlayerScreen(
             topBar = {
                 VigiProTopBar(
                     title = state.camera?.name ?: "Player",
-                    onBackClick = viewModel::onBack,
+                    onBackClick = actions.onBack,
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -355,8 +483,10 @@ fun PlayerScreen(
                         VideoSurface(
                             state = state,
                             exoPlayer = exoPlayer,
-                            viewModel = viewModel,
+                            vlcPlayer = vlcPlayer,
+                            actions = actions,
                             onPlayerViewCreated = { playerViewRef = it },
+                            onVlcSurfaceReady = { vlcSurfaceViewRef = it },
                             onTalkbackToggle = onTalkbackToggle,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -367,10 +497,24 @@ fun PlayerScreen(
                             ErrorState(
                                 message = state.errorMessage!!,
                                 onRetry = {
-                                    viewModel.onRetry()
-                                    exoPlayer.stop()
-                                    exoPlayer.prepare()
-                                    exoPlayer.playWhenReady = true
+                                    actions.onRetry()
+                                    vlcPlayer?.stop()
+                                    val camera = state.camera
+                                    val source = when {
+                                        camera?.hlsUrl != null ->
+                                            HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
+                                                .createMediaSource(MediaItem.fromUri(camera.hlsUrl!!))
+                                        camera?.rtspUrl != null ->
+                                            RtspMediaSource.Factory()
+                                                .setTimeoutMs(10_000L)
+                                                .createMediaSource(MediaItem.fromUri(camera.rtspUrl!!))
+                                        else -> null
+                                    }
+                                    if (source != null) {
+                                        exoPlayer.setMediaSource(source)
+                                        exoPlayer.prepare()
+                                        exoPlayer.playWhenReady = true
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -387,9 +531,11 @@ fun PlayerScreen(
 private fun FullscreenPlayerContent(
     state: PlayerState,
     exoPlayer: ExoPlayer,
+    vlcPlayer: VlcPlayerWrapper?,
     snackbarHostState: SnackbarHostState,
-    viewModel: PlayerViewModel,
+    actions: PlayerActions,
     onPlayerViewCreated: (PlayerView) -> Unit,
+    onVlcSurfaceReady: (SurfaceView) -> Unit,
     onTalkbackToggle: () -> Unit,
 ) {
     Box(
@@ -400,8 +546,10 @@ private fun FullscreenPlayerContent(
         VideoSurface(
             state = state,
             exoPlayer = exoPlayer,
-            viewModel = viewModel,
+            vlcPlayer = vlcPlayer,
+            actions = actions,
             onPlayerViewCreated = onPlayerViewCreated,
+            onVlcSurfaceReady = onVlcSurfaceReady,
             onTalkbackToggle = onTalkbackToggle,
             modifier = Modifier.fillMaxSize(),
         )
@@ -415,9 +563,12 @@ private fun FullscreenPlayerContent(
 @OptIn(UnstableApi::class)
 @Composable
 private fun PipPlayerContent(
+    state: PlayerState,
     exoPlayer: ExoPlayer,
-    viewModel: PlayerViewModel,
+    vlcPlayer: VlcPlayerWrapper?,
+    setSurfaceView: (SurfaceView?) -> Unit,
     onPlayerViewCreated: (PlayerView) -> Unit,
+    onVlcSurfaceReady: (SurfaceView) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -425,24 +576,36 @@ private fun PipPlayerContent(
             .background(Color.Black),
         contentAlignment = Alignment.Center,
     ) {
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    useController = false
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
-                }
-            },
-            update = { view ->
-                view.player = exoPlayer
-                onPlayerViewCreated(view)
-                viewModel.setSurfaceView(view.videoSurfaceView as? SurfaceView)
-            },
-            onRelease = { view ->
-                view.player = null
-                viewModel.setSurfaceView(null)
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+        if (state.useVlcPlayer && vlcPlayer != null) {
+            VlcVideoSurface(
+                vlcPlayer = vlcPlayer,
+                rtspUrl = state.camera?.rtspUrl ?: "",
+                onSurfaceViewReady = { surface ->
+                    onVlcSurfaceReady(surface)
+                    setSurfaceView(surface)
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        useController = false
+                        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                    }
+                },
+                update = { view ->
+                    view.player = exoPlayer
+                    onPlayerViewCreated(view)
+                    setSurfaceView(view.videoSurfaceView as? SurfaceView)
+                },
+                onRelease = { view ->
+                    view.player = null
+                    setSurfaceView(null)
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -451,64 +614,92 @@ private fun PipPlayerContent(
 private fun VideoSurface(
     state: PlayerState,
     exoPlayer: ExoPlayer,
-    viewModel: PlayerViewModel,
+    vlcPlayer: VlcPlayerWrapper?,
+    actions: PlayerActions,
     onPlayerViewCreated: (PlayerView) -> Unit,
+    onVlcSurfaceReady: (SurfaceView) -> Unit,
     onTalkbackToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .background(Color.Black)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { viewModel.onControlsTap() },
-                    onDoubleTap = { viewModel.onToggleFullscreen() },
-                )
-            },
+            .then(
+                // ExoPlayer: use Compose pointerInput for tap gestures
+                // VLC: skip — GestureDetector on SurfaceView handles taps natively
+                if (state.useVlcPlayer) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { actions.onControlsTap() },
+                            onDoubleTap = { actions.onToggleFullscreen() },
+                        )
+                    }
+                },
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        // Video surface (no native controls)
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    useController = false
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
-                }
-            },
-            update = { view ->
-                view.player = exoPlayer
-                onPlayerViewCreated(view)
-                viewModel.setSurfaceView(view.videoSurfaceView as? SurfaceView)
-            },
-            onRelease = { view ->
-                view.player = null
-                viewModel.setSurfaceView(null)
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+        // Video surface — VLC fallback or ExoPlayer
+        if (state.useVlcPlayer && vlcPlayer != null) {
+            VlcVideoSurface(
+                vlcPlayer = vlcPlayer,
+                rtspUrl = state.camera?.rtspUrl ?: "",
+                onSurfaceViewReady = { surface ->
+                    onVlcSurfaceReady(surface)
+                    actions.setSurfaceView(surface)
+                },
+                onTap = { actions.onControlsTap() },
+                onDoubleTap = { actions.onToggleFullscreen() },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        useController = false
+                        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                    }
+                },
+                update = { view ->
+                    view.player = exoPlayer
+                    onPlayerViewCreated(view)
+                    actions.setSurfaceView(view.videoSurfaceView as? SurfaceView)
+                },
+                onRelease = { view ->
+                    view.player = null
+                    actions.setSurfaceView(null)
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
-        // Detection overlay (bounding boxes + AI badge)
-        DetectionOverlay(
-            detectedObjects = state.detectedObjects,
-            isActive = state.isDetectionActive,
-        )
+        val isDemo = state.camera?.isDemo == true
 
-        // Privacy mask overlay (always visible when zones exist and masking enabled)
-        if (state.privacyMaskingEnabled && state.privacyZones.isNotEmpty() && !state.isEditingPrivacyZones) {
+        // Detection overlay (bounding boxes + AI badge) — not for demo
+        if (!isDemo) {
+            DetectionOverlay(
+                detectedObjects = state.detectedObjects,
+                isActive = state.isDetectionActive,
+            )
+        }
+
+        // Privacy mask overlay (always visible when zones exist and masking enabled) — not for demo
+        if (!isDemo && state.privacyMaskingEnabled && state.privacyZones.isNotEmpty() && !state.isEditingPrivacyZones) {
             PrivacyMaskOverlay(
                 zones = state.privacyZones,
             )
         }
 
-        // Privacy zone editor (interactive, when editing)
-        if (state.isEditingPrivacyZones) {
+        // Privacy zone editor (interactive, when editing) — not for demo
+        if (!isDemo && state.isEditingPrivacyZones) {
             PrivacyZoneEditor(
                 zones = state.privacyZones,
                 onZoneAdded = { left, top, right, bottom ->
-                    viewModel.onAddPrivacyZone(left, top, right, bottom)
+                    actions.onAddPrivacyZone(left, top, right, bottom)
                 },
-                onZoneDeleted = viewModel::onDeletePrivacyZone,
-                onDismiss = viewModel::onTogglePrivacyZoneEditor,
+                onZoneDeleted = actions.onDeletePrivacyZone,
+                onDismiss = actions.onTogglePrivacyZoneEditor,
             )
         }
 
@@ -527,70 +718,76 @@ private fun VideoSurface(
                 .padding(top = if (state.isFullscreen) Dimens.SpacingXxxl else Dimens.SpacingSm),
         )
 
-        // Talkback push-to-talk button (bottom-start)
-        TalkbackButton(
-            isActive = state.isTalkbackActive,
-            isVisible = state.talkbackAvailable && state.hasMicPermission && state.talkbackEnabled,
-            onPress = viewModel::onTalkbackPress,
-            onRelease = viewModel::onTalkbackRelease,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp),
-        )
+        // Talkback push-to-talk button (bottom-start) — not for demo
+        if (!isDemo) {
+            TalkbackButton(
+                isActive = state.isTalkbackActive,
+                isVisible = state.talkbackAvailable && state.hasMicPermission && state.talkbackEnabled,
+                onPress = actions.onTalkbackPress,
+                onRelease = actions.onTalkbackRelease,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+            )
+        }
 
-        // Patrol status button (top-start, below controls)
-        if (state.camera?.ptzCapable == true && state.isPtzConnected && state.patrolState.isPatrolling) {
+        // Patrol status button (top-start, below controls) — not for demo
+        if (!isDemo && state.camera?.ptzCapable == true && state.isPtzConnected && state.patrolState.isPatrolling) {
             PatrolButton(
                 patrolState = state.patrolState,
-                onClick = viewModel::onShowPatrolSheet,
+                onClick = actions.onShowPatrolSheet,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 16.dp, top = if (state.isFullscreen) 72.dp else 56.dp),
             )
         }
 
-        // Webhook button (bottom-end, above controls)
-        WebhookButton(
-            webhooks = state.webhooks,
-            onExecute = viewModel::onExecuteWebhook,
-            isExecuting = state.isWebhookExecuting,
-            onAddWebhook = viewModel::onShowAddWebhook,
-            onDeleteWebhook = viewModel::onDeleteWebhook,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-        )
-
-        // Add Webhook dialog
-        if (state.showAddWebhookDialog) {
-            AddWebhookDialog(
-                cameraId = state.camera?.id ?: "",
-                onSave = viewModel::onSaveWebhook,
-                onDismiss = viewModel::onDismissAddWebhook,
+        // Webhook button (bottom-end, above controls) — not for demo
+        if (!isDemo) {
+            WebhookButton(
+                webhooks = state.webhooks,
+                onExecute = actions.onExecuteWebhook,
+                isExecuting = state.isWebhookExecuting,
+                onAddWebhook = actions.onShowAddWebhook,
+                onDeleteWebhook = actions.onDeleteWebhook,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
             )
         }
 
-        // Patrol config sheet
-        if (state.showPatrolSheet) {
+        // Add Webhook dialog — not for demo
+        if (!isDemo && state.showAddWebhookDialog) {
+            AddWebhookDialog(
+                cameraId = state.camera?.id ?: "",
+                onSave = actions.onSaveWebhook,
+                onDismiss = actions.onDismissAddWebhook,
+            )
+        }
+
+        // Patrol config sheet — not for demo
+        if (!isDemo && state.showPatrolSheet) {
             PatrolConfigSheet(
                 presets = state.ptzPresets,
                 patrolState = state.patrolState,
                 cameraId = state.camera?.id ?: "",
-                onStartPatrol = viewModel::onStartPatrol,
-                onStopPatrol = viewModel::onStopPatrol,
-                onDismiss = viewModel::onDismissPatrolSheet,
+                onStartPatrol = actions.onStartPatrol,
+                onStopPatrol = actions.onStopPatrol,
+                onDismiss = actions.onDismissPatrolSheet,
             )
         }
 
-        // PTZ control pad (center-left)
-        PtzControlPad(
-            isVisible = state.showPtzControls && state.isPtzConnected,
-            presets = state.ptzPresets,
-            onMove = viewModel::onPtzMove,
-            onStop = viewModel::onPtzStop,
-            onPresetClick = viewModel::onPtzPreset,
-            modifier = Modifier.align(Alignment.CenterStart),
-        )
+        // PTZ control pad (center-left) — not for demo
+        if (!isDemo) {
+            PtzControlPad(
+                isVisible = state.showPtzControls && state.isPtzConnected,
+                presets = state.ptzPresets,
+                onMove = actions.onPtzMove,
+                onStop = actions.onPtzStop,
+                onPresetClick = actions.onPtzPreset,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
+        }
 
         // Custom controls overlay
         PlayerControlsOverlay(
@@ -598,33 +795,38 @@ private fun VideoSurface(
             isPlaying = state.isPlaying,
             isFullscreen = state.isFullscreen,
             isAudioEnabled = state.isAudioEnabled,
-            isPtzCapable = state.camera?.ptzCapable == true && state.isPtzConnected,
-            showPtzControls = state.showPtzControls,
-            isDetectionActive = state.isDetectionActive,
-            detectionEnabled = state.detectionEnabled,
-            isTalkbackActive = state.isTalkbackActive,
-            talkbackAvailable = state.talkbackAvailable && state.talkbackEnabled,
+            isPtzCapable = !isDemo && state.camera?.ptzCapable == true && state.isPtzConnected,
+            showPtzControls = !isDemo && state.showPtzControls,
+            isDetectionActive = !isDemo && state.isDetectionActive,
+            detectionEnabled = !isDemo && state.detectionEnabled,
+            isTalkbackActive = !isDemo && state.isTalkbackActive,
+            talkbackAvailable = !isDemo && state.talkbackAvailable && state.talkbackEnabled,
             cameraName = state.camera?.name ?: "",
-            onBackClick = viewModel::onBack,
+            onBackClick = actions.onBack,
             onPlayPauseClick = {
-                viewModel.onPlayPause()
-                if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                actions.onPlayPause()
+                if (state.useVlcPlayer) {
+                    val vlc = vlcPlayer
+                    if (vlc != null && vlc.isPlaying) vlc.pause() else vlc?.resume()
+                } else {
+                    if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                }
             },
-            onFullscreenClick = viewModel::onToggleFullscreen,
-            onAudioToggle = viewModel::onToggleAudio,
-            onSnapshotClick = viewModel::onSnapshot,
-            onPtzToggle = viewModel::onTogglePtzControls,
-            onInfoClick = viewModel::onToggleStreamInfo,
-            onDetectionToggle = viewModel::onToggleDetection,
+            onFullscreenClick = actions.onToggleFullscreen,
+            onAudioToggle = actions.onToggleAudio,
+            onSnapshotClick = actions.onSnapshot,
+            onPtzToggle = actions.onTogglePtzControls,
+            onInfoClick = actions.onToggleStreamInfo,
+            onDetectionToggle = actions.onToggleDetection,
             onTalkbackToggle = onTalkbackToggle,
-            onPipClick = viewModel::onEnterPip,
-            isRecording = state.isRecording,
-            recordingDurationMs = state.recordingDurationMs,
-            onRecordClick = viewModel::onToggleRecording,
-            isPatrolling = state.patrolState.isPatrolling,
-            onPatrolClick = viewModel::onShowPatrolSheet,
-            onPrivacyZoneToggle = viewModel::onTogglePrivacyZoneEditor,
-            hasPrivacyZones = state.privacyZones.isNotEmpty(),
+            onPipClick = actions.onEnterPip,
+            isRecording = !isDemo && state.isRecording,
+            recordingDurationMs = { state.recordingDurationMs },
+            onRecordClick = actions.onToggleRecording,
+            isPatrolling = !isDemo && state.patrolState.isPatrolling,
+            onPatrolClick = actions.onShowPatrolSheet,
+            onPrivacyZoneToggle = actions.onTogglePrivacyZoneEditor,
+            hasPrivacyZones = !isDemo && state.privacyZones.isNotEmpty(),
             modifier = if (state.isFullscreen) {
                 Modifier
                     .fillMaxSize()

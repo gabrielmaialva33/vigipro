@@ -111,7 +111,7 @@ fun AddCameraScreen(
             TopAppBar(
                 title = { 
                     Text(
-                        text = if (state.name.isNotBlank()) state.name else if (state.isEditMode) "Editar Camera" else "Adicionar Camera",
+                        text = if (state.name.isNotBlank()) state.name else if (state.isEditMode) "Editar Câmera" else "Adicionar Câmera",
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
@@ -279,7 +279,7 @@ fun AddCameraScreen(
                         modifier = Modifier.size(Dimens.IconMd),
                     )
                     Spacer(modifier = Modifier.width(Dimens.SpacingSm))
-                    Text("Excluir Camera", fontSize = 16.sp)
+                    Text("Excluir Câmera", fontSize = 16.sp)
                 }
             }
 
@@ -606,7 +606,7 @@ private fun DeleteConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Excluir Camera") },
+        title = { Text("Excluir Câmera") },
         text = { Text("Tem certeza que deseja excluir \"$cameraName\"?") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
