@@ -30,7 +30,6 @@
 ## Overview
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#2563eb', 'secondaryColor': '#dcfce7', 'secondaryTextColor': '#052e16', 'secondaryBorderColor': '#16a34a', 'tertiaryColor': '#e0f2fe', 'lineColor': '#2563eb', 'textColor': '#1e293b'}}}%%
 flowchart LR
     subgraph Device["Android Device"]
         DISCOVER[Discover — Public Cameras]
