@@ -59,9 +59,11 @@ dependencies {
     // Feature modules
     implementation(project(":feature:feature-auth"))
     implementation(project(":feature:feature-dashboard"))
+    implementation(project(":feature:feature-discover"))
     implementation(project(":feature:feature-player"))
     implementation(project(":feature:feature-devices"))
     implementation(project(":feature:feature-access-control"))
+    implementation(project(":feature:feature-sites"))
     implementation(project(":feature:feature-settings"))
 
     // AndroidX
@@ -91,6 +93,7 @@ dependencies {
 
     // Firebase (BoM manages versions)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.messaging)

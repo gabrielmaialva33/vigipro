@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Shield silhouette with camera body cutout (evenOdd punch-out) -->
+    <path
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M54,23 L28,35 C28,35 28,55 28,59 C28,73 38,82 54,86 C70,82 80,73 80,59 C80,55 80,35 80,35 Z M44,48 L64,48 C65.5,48 66,49 66,50.5 L66,61 C66,62.5 65.5,63 64,63 L44,63 C42.5,63 42,62.5 42,61 L42,50.5 C42,49 42.5,48 44,48 Z" />
+    <!-- Lens circle (visible inside camera cutout) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54,55.5 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0" />
+    <!-- Camera viewfinder -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M49,44 L59,44 L61,48 L47,48 Z" />
+</vector>

@@ -38,6 +38,10 @@
 # ---- Coil ----
 -dontwarn coil3.**
 
+# ---- libVLC ----
+-keep class org.videolan.libvlc.** { *; }
+-dontwarn org.videolan.libvlc.**
+
 # ---- General optimizations ----
 -optimizationpasses 5
 -allowaccessmodification
