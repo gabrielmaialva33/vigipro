@@ -1,162 +1,348 @@
-# VigiPro
+<div align="center">
 
-Sistema profissional de monitoramento de cameras de seguranca para Android.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e3a5f,50:2563eb,100:0ea5e9&height=200&section=header&text=V%20I%20G%20I%20P%20R%20O&fontSize=60&fontColor=fff&animation=twinkling&fontAlignY=35&desc=Professional%20CCTV%20Monitoring%20%E2%80%94%20See%20Everything.%20Control%20Everything.&descSize=18&descAlignY=55" width="100%"/>
 
-Alternativa brasileira moderna ao iSIC Lite, com arquitetura multi-tenant, controle de acesso granular e suporte completo a ONVIF/RTSP.
+<br/>
 
-## Funcionalidades
+[![Kotlin](https://img.shields.io/badge/Kotlin_2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Phoenix](https://img.shields.io/badge/Phoenix_1.8-FD4F00?style=for-the-badge&logo=phoenixframework&logoColor=white)](https://phoenixframework.org)
+[![Firebase](https://img.shields.io/badge/Firebase-DD2C00?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com)
+[![License](https://img.shields.io/badge/license-MIT-2563eb?style=for-the-badge)](./LICENSE)
 
-### Monitoramento
-- Grid de cameras com layouts 1x1, 2x2 e 3x3
-- Player RTSP profissional com Media3/ExoPlayer
-- Controle PTZ (Pan-Tilt-Zoom) via SOAP/ONVIF
-- Fullscreen com orientacao automatica
-- Captura de snapshot com compartilhamento
-- Audio bidirecional
-- Monitoramento de status (online/offline/erro)
+---
 
-### Dispositivos
-- Descoberta automatica ONVIF (WS-Discovery)
-- Configuracao manual de cameras RTSP
-- Scan de QR Code para adicionar cameras
-- Edicao e remocao de dispositivos
+*"Monitoramento profissional de cameras de seguranca, do descobrimento ao streaming ao vivo."*
 
-### Multi-Tenant
-- Autenticacao via Supabase Auth (email/senha)
-- Gerenciamento de sites (locais de monitoramento)
-- Convites com QR Code e link compartilhavel
-- Papeis: Owner, Admin, Viewer, Time Restricted, Guest
-- Deep link: `vigipro.app/invite/{code}`
+</div>
 
-### Controle de Acesso
-- Listagem de membros por site com badge de papel
-- Criacao de convites com validade e limite de usos
-- Resgate de convites com verificacao automatica
-- Remocao de membros (owner/admin only)
-- Row Level Security no backend
+---
 
-### Configuracoes
-- Informacoes da conta (email + logout)
-- Qualidade padrao de stream
-- Timeout de conexao
-- Tema (claro/escuro/sistema)
-- Tamanho do buffer
+> [!NOTE]
+> **VigiPro** is a multi-module Android app for professional security camera monitoring (CCTV/ONVIF).
+> Features ONVIF auto-discovery, RTSP/HLS live streaming, PTZ control, ML Kit smart detection,
+> public camera catalog, multi-site management, and a Phoenix Cloud backend with real-time
+> MJPEG-to-HLS conversion.
 
-## Arquitetura
+---
 
-```
-┌─────────────────────────────────────────────────┐
-│                    app (NavHost)                 │
-├──────────┬──────────┬──────────┬────────────────┤
-│  auth    │dashboard │ player   │ access-control │
-│  devices │ settings │          │                │
-├──────────┴──────────┴──────────┴────────────────┤
-│              core-ui (Compose + Theme)          │
-├─────────────────────────────────────────────────┤
-│              core-data (Room + Repos)           │
-├──────────────────┬──────────────────────────────┤
-│   core-model     │      core-network            │
-│   (Domain)       │    (Supabase SDK)            │
-└──────────────────┴──────────────────────────────┘
-         │                       │
-    Local (Room)          Supabase Cloud
-    - cameras             - auth.users
-    - sites (cache)       - sites (RLS)
-                          - site_members (RLS)
-                          - invitations (RLS)
+## Overview
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#dbeafe', 'primaryTextColor': '#1e3a5f', 'primaryBorderColor': '#2563eb', 'secondaryColor': '#dcfce7', 'secondaryTextColor': '#052e16', 'secondaryBorderColor': '#16a34a', 'tertiaryColor': '#e0f2fe', 'lineColor': '#2563eb', 'textColor': '#1e293b'}}}%%
+flowchart LR
+    subgraph Device["Android Device"]
+        DISCOVER[Discover — Public Cameras]
+        ONVIF[ONVIF Discovery]
+        PLAYER[Player — ExoPlayer]
+        DETECT[ML Kit Detection]
+    end
+
+    subgraph Backend["Cloud Backend"]
+        direction TB
+        PHOENIX[Phoenix API]
+        FFMPEG[FFmpeg — MJPEG to HLS]
+        SUPA[Supabase — Auth + DB]
+        PHOENIX --> FFMPEG
+        PHOENIX --> SUPA
+    end
+
+    subgraph Sources["Camera Sources"]
+        RTSP[RTSP/ONVIF Cameras]
+        PUBLIC[Public Cameras — COR Rio]
+        DEMO[Demo Streams]
+    end
+
+    Sources --> Backend
+    Backend --> Device
+    RTSP --> PLAYER
 ```
 
-## Stack Tecnologica
+| Property | Value |
+|:---------|:------|
+| **Language** | Kotlin 2.1 (Coroutines, Serialization, KSP) |
+| **UI** | Jetpack Compose + Material 3 |
+| **State** | Orbit MVI (Container, Intent, Reduce) |
+| **DI** | Dagger Hilt |
+| **Backend** | Phoenix 1.8 (Elixir) + Supabase |
+| **Auth** | Firebase Auth + Google Sign-In |
+| **Video** | ExoPlayer (RTSP + HLS) |
+| **Protocol** | ONVIF (discovery, PTZ, profiles) |
+| **Detection** | ML Kit (objects, text, labels) |
+| **Min SDK** | 26 (Android 8.0) |
 
-| Camada | Tecnologia |
-|--------|-----------|
-| UI | Jetpack Compose + Material 3 |
-| State | Orbit MVI 9.x |
-| DI | Dagger Hilt |
-| Navigation | Navigation Compose |
-| Video | Media3/ExoPlayer (RTSP) |
-| Camera Protocol | ONVIF (WS-Discovery + SOAP) |
-| Backend | Supabase (Auth + Postgrest + Realtime) |
-| Local DB | Room (v2, migrations) |
-| Networking | Ktor + OkHttp |
-| Serialization | kotlinx.serialization |
-| QR Code | ZXing (gen) + ML Kit (scan) |
-| Images | Coil 3 |
-| Testing | JUnit + MockK + Turbine + orbit-test |
+---
 
-## Setup
+<p align="center">
+  <a href="#-features">Features</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-architecture">Architecture</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-player">Player</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-cloud-backend">Cloud Backend</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-quick-start">Quick Start</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-domain-model">Domain Model</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-license">License</a>
+</p>
 
-### Pre-requisitos
+---
 
-- Android Studio Ladybug+ (AGP 8.8.2)
-- JDK 21
-- Android SDK 36
+## ⚡ Features
 
-### Supabase
+| Feature | Description |
+|:--------|:------------|
+| **ONVIF Discovery** | Auto-discover cameras on local network via WS-Discovery |
+| **RTSP Streaming** | Live video with ExoPlayer, TCP transport, low latency |
+| **HLS Streaming** | Cloud-converted streams from public MJPEG cameras |
+| **PTZ Control** | Pan/Tilt/Zoom via ONVIF with touch gestures |
+| **Public Cameras** | Browse 14+ real public cameras (COR Rio, US DOT) without login |
+| **ML Kit Detection** | On-device object detection, text recognition, image labeling |
+| **Multi-Site** | Organize cameras by site with role-based access control |
+| **Invite System** | QR code invitations with time-scoped camera permissions |
+| **Offline-First** | Room DB cache, RTSP credentials never leave device |
+| **Firebase** | Auth, Crashlytics, FCM, Analytics, Remote Config, App Check |
 
-1. Crie um projeto em [supabase.com](https://supabase.com)
-2. Configure as credenciais em `core/core-network/build.gradle.kts`:
-   ```kotlin
-   buildConfigField("String", "SUPABASE_URL", "\"https://SEU_PROJETO.supabase.co\"")
-   buildConfigField("String", "SUPABASE_KEY", "\"SUA_ANON_KEY\"")
-   ```
-3. Instale e configure o CLI:
-   ```bash
-   npx supabase login --token SEU_TOKEN
-   npx supabase link --project-ref SEU_PROJECT_REF
-   npx supabase db push --linked
-   ```
+---
+
+## 🏗 Architecture
+
+```
+app/                          → Entry point, navigation, FCM
+core/
+  core-model/                 → Domain models (pure Kotlin)
+  core-network/               → Supabase client + Cloud API
+  core-data/                  → Room DB, repositories, ML Kit engines
+  core-ui/                    → Material 3 theme, shared components
+feature/
+  feature-auth/               → Firebase Auth + Google Sign-In
+  feature-discover/           → Public camera catalog (no login required)
+  feature-dashboard/          → Camera grid with multi-site support
+  feature-player/             → RTSP/HLS player + PTZ + fullscreen
+  feature-devices/            → ONVIF discovery + QR scanning
+  feature-sites/              → Site management
+  feature-access-control/     → Invitations + role management
+  feature-settings/           → App settings + account
+build-logic/convention/       → Gradle convention plugins
+cloud/                        → Phoenix API backend (Elixir)
+supabase/migrations/          → SQL migrations
+```
+
+### Convention Plugins
+
+| Plugin | What it does |
+|:-------|:-------------|
+| `vigipro.android.application` | App module setup (compileSdk, signing, etc.) |
+| `vigipro.android.library` | Library module defaults |
+| `vigipro.android.compose` | Compose BOM + dependencies |
+| `vigipro.android.hilt` | KSP + Hilt wiring |
+| `vigipro.android.feature` | All-in-one: library + compose + hilt + Orbit MVI + navigation |
+
+> Feature modules only need `plugins { alias(libs.plugins.vigipro.android.feature) }` — the convention plugin handles everything.
+
+---
+
+## 🎬 Player
+
+The player supports multiple stream types:
+
+| Source | Protocol | Handling |
+|:-------|:---------|:---------|
+| Local cameras | RTSP over TCP | Direct ExoPlayer `RtspMediaSource` |
+| Public cameras (COR Rio) | MJPEG → HLS | Phoenix backend converts via FFmpeg |
+| Public cameras (US DOT) | HLS | Direct ExoPlayer `HlsMediaSource` |
+| Demo cameras | HLS | FFmpeg lavfi test patterns |
+
+<details>
+<summary><strong>PTZ Control</strong></summary>
+
+- Touch-based directional control overlay
+- ONVIF ContinuousMove / AbsoluteMove
+- Zoom via pinch gesture
+- Preset positions support
+
+</details>
+
+<details>
+<summary><strong>Smart Detection (ML Kit)</strong></summary>
+
+| Engine | Model | Detects |
+|:-------|:------|:--------|
+| Object Detection | EfficientDet-Lite0 | Person, vehicle, animal |
+| Text Recognition | ML Kit Latin | License plates, signs |
+| Image Labeling | ML Kit default | Scene classification |
+
+Auto-alerts on person detection via `SmartDetectionManager`.
+
+</details>
+
+---
+
+## ☁ Cloud Backend
+
+**Phoenix 1.8** (Elixir) — API-only, deployed via Docker on VPS.
+
+| Endpoint | Description |
+|:---------|:------------|
+| `GET /api/health` | Health check |
+| `GET /api/public/cameras` | Public camera catalog (paginated) |
+| `GET /api/public/categories` | Camera categories with counts |
+| `GET /hls/:camera_id/:file` | HLS segments (CORS enabled) |
+| `POST /api/cameras/sync` | Sync cameras (JWT auth) |
+| `POST /api/events` | Log camera events (JWT auth) |
+
+### Stream Pipeline
+
+```
+COR Rio MJPEG → FFmpeg (mjpeg → x264 → HLS) → /tmp/vigipro_hls/ → Nginx → Client
+                  ↑ reconnect flags              ↑ HlsCleaner        ↑ SSL
+                  ↑ ultrafast preset              ↑ skips active      ↑ Certbot
+```
+
+<details>
+<summary><strong>Deployment</strong></summary>
+
+```bash
+cd cloud
+bash deploy.sh    # rsync + docker build + nginx + certbot
+```
+
+Runs at `https://vigipro.mahina.cloud` — Docker + Nginx reverse proxy + Let's Encrypt SSL.
+
+</details>
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+| Tool | Version | Required |
+|:-----|:--------|:---------|
+| Android Studio | Ladybug+ | Yes |
+| JDK | 21 | Yes |
+| Kotlin | 2.1.10 | Yes |
+| Gradle | 8.12.1 | Yes |
+| Supabase CLI | latest | For DB migrations |
 
 ### Build
 
 ```bash
+git clone https://github.com/gabrielmaialva33/vigipro.git
+cd vigipro
+
+# Debug build
 ./gradlew assembleDebug
-```
 
-### Testes
+# Release build
+./gradlew assembleRelease
 
-```bash
+# Run tests
 ./gradlew test
 ```
 
-## Estrutura de Modulos
+<details>
+<summary><strong>Environment Setup</strong></summary>
 
-```
-vigipro/
-├── app/                          # Entry point, navigation
-├── core/
-│   ├── core-model/               # Site, Camera, SiteMember, Invitation, UserRole
-│   ├── core-network/             # SupabaseClient (Auth, Postgrest, Realtime, Storage)
-│   ├── core-data/                # Room DB, DAOs, Repositories, Extensions
-│   │   ├── db/                   # CameraEntity, SiteEntity, DAOs, Database
-│   │   ├── repository/           # Auth, Site, Invitation, Camera repos
-│   │   ├── extensions/           # Result, Flow, String extensions
-│   │   ├── monitor/              # CameraStatusMonitor
-│   │   └── rtsp/                 # RtspConnectionTester
-│   └── core-ui/                  # Theme, Dimens, Components, Extensions
-│       ├── components/           # CameraCard, RoleBadge, SiteDropdown, etc.
-│       ├── theme/                # Material 3 theme + color scheme
-│       └── extensions/           # Modifier (shimmer), Context (share, copy)
-├── feature/
-│   ├── feature-auth/             # LoginScreen, AuthViewModel
-│   ├── feature-dashboard/        # DashboardScreen, DashboardViewModel
-│   ├── feature-player/           # PlayerScreen, PTZ, Snapshot, Fullscreen
-│   ├── feature-devices/          # AddCamera, ONVIF Discovery
-│   ├── feature-access-control/   # Members, Invites, QR Code, Redeem
-│   └── feature-settings/        # Settings, Account, Logout
-├── build-logic/convention/       # Gradle convention plugins
-├── supabase/migrations/          # SQL schema + RLS policies
-└── gradle/libs.versions.toml     # Dependency catalog
+Create `local.properties` or set in `BuildConfig`:
+
+```properties
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
 ```
 
-## Seguranca
+Firebase: place `google-services.json` in `app/`.
 
-- **RLS (Row Level Security)**: Todas as tabelas do Supabase possuem policies que restringem acesso baseado no `auth.uid()`. Nenhum dado e acessivel sem autenticacao.
-- **SECURITY DEFINER**: A funcao `redeem_invitation` roda com permissoes elevadas para permitir criacao de membros independente de RLS do usuario.
-- **Credenciais RTSP**: Armazenadas apenas localmente no dispositivo (Room). Nunca sincronizadas com o backend.
-- **Anon Key**: A chave anonima do Supabase e publica por design. Seguranca e garantida por RLS no servidor.
-- **Token Refresh**: O SDK do Supabase gerencia refresh de tokens automaticamente.
+</details>
 
-## Licenca
+---
 
-Projeto privado. Todos os direitos reservados.
+## 🗄 Domain Model
+
+```mermaid
+erDiagram
+    SITE ||--o{ CAMERA : has
+    SITE ||--o{ SITE_MEMBER : has
+    SITE_MEMBER ||--o{ CAMERA_PERMISSION : has
+    SITE ||--o{ INVITATION : has
+
+    SITE {
+        string id PK
+        string name
+        string owner_id
+    }
+    CAMERA {
+        string id PK
+        string site_id FK
+        string name
+        string rtsp_url
+        enum status
+        boolean ptz_capable
+    }
+    SITE_MEMBER {
+        string user_id
+        string site_id
+        enum role
+    }
+    INVITATION {
+        string code PK
+        string site_id FK
+        timestamp expires_at
+    }
+```
+
+### Roles
+
+| Role | Permissions |
+|:-----|:------------|
+| **OWNER** | Full control, manage members, delete site |
+| **ADMIN** | Add/remove cameras, invite members |
+| **VIEWER** | View cameras, receive alerts |
+| **TIME_RESTRICTED** | View cameras within time windows |
+| **GUEST** | View specific cameras only |
+
+---
+
+## 🔒 Security
+
+- **RLS** — All Supabase tables enforce Row Level Security based on `auth.uid()`
+- **SECURITY DEFINER** — `redeem_invitation` runs with elevated permissions
+- **RTSP credentials** — Stored locally only (Room DB), never synced to cloud
+- **App Check** — Play Integrity provider validates device authenticity
+- **Token refresh** — Supabase SDK handles automatic session renewal
+
+---
+
+## 📦 Tech Stack
+
+| Layer | Technology |
+|:------|:-----------|
+| **UI** | Jetpack Compose, Material 3, Phosphor Icons |
+| **State** | Orbit MVI (orbit-core, orbit-compose, orbit-viewmodel) |
+| **DI** | Dagger Hilt |
+| **Navigation** | Jetpack Navigation Compose |
+| **Networking** | Supabase SDK 3.1.2 (Ktor), OkHttp, Retrofit |
+| **Persistence** | Room v2, DataStore Preferences |
+| **Video** | Media3 ExoPlayer (RTSP + HLS) |
+| **Camera Protocol** | ONVIF (com.seanproctor:onvifcamera) |
+| **ML** | ML Kit (Object Detection, Text Recognition, Image Labeling) |
+| **QR** | ZXing (generation), ML Kit Barcode (reading) |
+| **Images** | Coil 3 (Ktor backend) |
+| **Auth** | Firebase Auth, Google Credential Manager |
+| **Monitoring** | Firebase Crashlytics, Analytics, Performance |
+| **Push** | Firebase Cloud Messaging |
+| **Backend** | Phoenix 1.8 (Elixir), FFmpeg, Docker |
+| **Database** | Supabase (PostgreSQL + RLS) |
+| **Testing** | JUnit 4, MockK, Turbine, orbit-test |
+
+---
+
+## 📜 License
+
+MIT — Gabriel Maia ([@gabrielmaialva33](https://github.com/gabrielmaialva33))
+
+---
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e3a5f,50:2563eb,100:0ea5e9&height=100&section=footer" width="100%"/>
+
+</div>
